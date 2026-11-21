@@ -29,6 +29,11 @@
     "width": 1440,
     "height": 900
   },
+  "admin-audit-stream": {
+    "src": "/images/admin-audit-stream.webp",
+    "width": 1440,
+    "height": 900
+  },
   "admin-auth-provider-access": {
     "src": "/images/admin-auth-provider-access.webp",
     "width": 1440,
@@ -61,6 +66,11 @@
   },
   "admin-capture": {
     "src": "/images/admin-capture.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "admin-definition-scanning": {
+    "src": "/images/admin-definition-scanning.webp",
     "width": 1440,
     "height": 900
   },
@@ -164,6 +174,11 @@
     "width": 1440,
     "height": 900
   },
+  "audit-stream-held-row": {
+    "src": "/images/audit-stream-held-row.webp",
+    "width": 1440,
+    "height": 900
+  },
   "call-detail-payload": {
     "src": "/images/call-detail-payload.webp",
     "width": 1440,
@@ -171,6 +186,11 @@
   },
   "capability-classes": {
     "src": "/images/capability-classes.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "capability-scan-findings": {
+    "src": "/images/capability-scan-findings.webp",
     "width": 1440,
     "height": 900
   },

@@ -45,7 +45,7 @@
     "files": [
       "server-capabilities"
     ],
-    "alt": "The Capabilities tab of the Status server, as Priya Shah: \"1 change waiting\" and the warning \"1 capability changed since it was approved\", the untrusted-text notice, the note that a platform admin approves changed capabilities, Classify tools…, the Kind and State filters (Changed 1, Approved 5), and check_outage marked Changed with its new description \"Now also reports planned work.\""
+    "alt": "Status › Capabilities, as Priya Shah. Status is published with one change waiting. The warning says the catalog excludes changed capabilities until a platform admin approves them. The page shows the untrusted-text notice and Definition scan findings in Shadow mode."
   },
   "server-sign-in-card": {
     "files": [
@@ -75,7 +75,7 @@
     "files": [
       "publish-request"
     ],
-    "alt": "The \"Request publishing Status\" dialog, as Priya Shah: a platform admin reviews the server and its 6 capabilities, what the server receives (authentication None, the portal's identity token with the caller's name, email and teams, nothing on behalf of callers), a Note for the reviewer filled in, and Cancel and Request review."
+    "alt": "The Request publishing Status dialog, as Priya Shah. The end of the definition findings and What the server receives appear above a filled Note for the reviewer. The server receives the portal's signed identity token. Cancel and Request review appear at the bottom."
   },
   "gateway-capabilities-picker": {
     "files": [
@@ -189,7 +189,7 @@
     "files": [
       "admin-server-review-dialog"
     ],
-    "alt": "The \"Approve Wiki search for the catalog?\" dialog, as Morgan Lee: what the server receives, the team's note (\"Wiki search for everyone: read-only, …\"), an empty Note for the team, and Cancel and Approve and publish."
+    "alt": "The Approve Wiki search for the catalog dialog, as Morgan Lee. Definition scan findings are shown in Shadow mode with the ruleset and scan status for each tool. Cancel and Approve and publish appear at the bottom."
   },
   "admin-publishing": {
     "files": [
@@ -231,7 +231,7 @@
     "files": [
       "admin-retention"
     ],
-    "alt": "Admin › Retention, as Morgan Lee: periods for call records (90 days), recorded call contents (14), audit log (400) and usage totals (400) with their allowed ranges, and the Last run: 6 call records and 25 recorded call contents deleted."
+    "alt": "Admin › Retention, as Morgan Lee. The periods are 90 days for call records, 14 for recorded contents, and 400 each for the audit log and usage totals. The last run deleted 6 call records and 34 recorded contents."
   },
   "admin-capture": {
     "files": [
@@ -243,7 +243,7 @@
     "files": [
       "admin-usage"
     ],
-    "alt": "Admin › Usage, as Morgan Lee, over the last 30 days grouped by team, for every team: 1,115 calls (147 not OK), a 13.2% error rate, p50 125 ms and p95 934 ms, bytes sent and received, calls per day by outcome, and latency."
+    "alt": "Admin › Usage, as Morgan Lee, with the last 30 days grouped by team. The dashboard shows 1,149 calls, an 11.7% error rate, latency percentiles, bytes sent and received, and charts for calls and latency."
   },
   "admin-calls": {
     "files": [
@@ -267,7 +267,7 @@
     "files": [
       "admin-notifications"
     ],
-    "alt": "Admin › Notifications, as Morgan Lee, scrolled to the Email card: \"Email is set up\" (From Open MCP Portal <portal@example.com>, smtp.corp.example.com:25, None (unencrypted), 28 sent and 0 failed in 24 hours) with Send test email, the Delivery card (3 waiting, 1 failed in 24 hours, 2 platform and 2 team destinations), and the Platform webhooks IT alerts (#it-alerts) and Ops event relay, both Healthy, each URL cut after its host."
+    "alt": "Admin › Notifications, as Morgan Lee. The configured email relay appears with Send test email and delivery totals. The Delivery card shows the queue and last dispatch. The Platform webhooks list includes IT alerts and Ops event relay."
   },
   "admin-automation-tokens": {
     "files": [
@@ -489,12 +489,12 @@
     "files": [
       "admin-audit-stream"
     ],
-    "alt": "Admin › Audit stream, as Morgan Lee: \"Tamper-evident with pinned keys and stream id. Independently preserve and verify evidence at the receiver.\" and the link Receiver verification and key enrollment; the Stream status card with the stream id, epoch 1, the last and earliest sequences, Sealer (this replica) On, Stream state running, Checkpoints Enabled with the last checkpoint sequence and age, the active key id and fingerprint, Sinks gate Enabled with its minimum reader version, and the link Public checkpoint keys; the Sinks card with Create sink and one required Full sink, SIEM, to siem.example.com, active and enabled, lag 0, a recent last success and \"Holding — retention waits for this cursor.\"; and the Pull consumers card with Register consumer and the optional summary consumer archive."
+    "alt": "Admin › Audit stream, as Morgan Lee. Stream status shows a running sealer in epoch 1, the earliest and latest sequence numbers, the latest checkpoint, the active key and fingerprint, and the enabled sinks gate with its minimum reader version."
   },
   "audit-stream-held-row": {
     "files": [
       "audit-stream-held-row"
     ],
-    "alt": "The Sinks table on Admin › Audit stream, as Morgan Lee: the required Full sink SIEM held at an oversized row. Its Held oversized sequence column shows the sequence number and \"Sent to the receiver\" with a time and \"Not resent while held.\", its retention effect is \"Holding — retention waits for this cursor.\", and its actions include Acknowledge oversized next to Edit, Test, Rotate secret and Delete."
+    "alt": "The Sinks table on Admin › Audit stream, scrolled to the held sequence and actions. The required sink is active, retention waits for its cursor, and sequence 219 was sent to the receiver and won't be resent while held. Acknowledge oversized is available. Below, archive is an optional summary pull consumer."
   }
 }

@@ -1,6 +1,6 @@
 # Screenshot capture list
 
-Every image in these docs has a named slot in `lib/screenshot-slots.json` (its alt text and the file names it may have) and is placed with `<Screenshot slot="…" />`. Until an image is imported, the page shows a marked placeholder. This file is the capture list for the screenshot session. **The docs describe v0.15.3, but no slot has been captured on it yet.** Slots 1 to 79 were captured on Open MCP Portal v0.13.1 (2026-11-01, commit `0fe0fa9`, the tag); [For v0.15.3](#for-v0153) lists the 29 of them whose page changed since and that are **pending recapture**, and slots 80 to 83 are new and still placeholders. The v0.13.1 images came from the Example Corp capture stack in `../omp-assets/capture/` (`dc.sh build`, `up`, `seed`, `shoot`, `v02`, `v13`; `../omp-assets/capture/README.md` §6). The files, what each shows, the display-only edits and the state set by SQL are in `../omp-assets/screenshots/MANIFEST.md`. Slots 1 to 43 were first captured on v0.1.0 (2026-10-17) and 44 to 54 on v0.2.0 (2026-10-18); 55 to 79 were added for v0.13.1 and 80 to 83 for v0.15.3.
+Every image in these docs has a named slot in `lib/screenshot-slots.json` (its alt text and the file names it may have) and is placed with `<Screenshot slot="…" />`. Until an image is imported, the page shows a marked placeholder. This file is the capture list for the screenshot session. On 2026-11-21, 29 existing slots were retaken and slots 80–83 were added using the published Open MCP Portal v0.15.3 image at commit `e859260`. [For v0.15.3](#for-v0153) lists the updated shots. The other 50 slots come from the v0.13.1 Example Corp capture at commit `0fe0fa9`. Slots 1 to 43 were first captured on v0.1.0 (2026-10-17) and 44 to 54 on v0.2.0 (2026-10-18); 55 to 79 were added for v0.13.1 and 80 to 83 for v0.15.3.
 
 ## Rules
 
@@ -20,7 +20,7 @@ Every image in these docs has a named slot in `lib/screenshot-slots.json` (its a
   - Auth providers **Google** (Google preset, slug `google`) and **GitHub** (GitHub preset, slug `github`); they may point at `cmd/fakeoauth`, but never show a real client ID or secret.
 - **No real third parties.** Use the fakes in the repository (`make fake-mcp`, `make fake-oauth`, `make example-mail-fake`), not GitHub or Google accounts. As captured: `cmd/fakeoauth` stands in for Google and for SourceHub's authorization server, `examples/mail-mcp -fake-gmail` is Mail, and Status, Wiki search, On-call and Code search (SourceHub's hosted server, OAuth-protected like `cmd/fakemcp -protect`) are small capture servers with the same capabilities as `cmd/fakemcp` for Status and believable data (`../omp-assets/capture/stack/`).
 - **Size**: PNG, **1440×900** (device scale factor 1), light theme unless the state says otherwise.
-- **Version**: every slot is captured from the release the docs describe, built from its tag by the capture stack (now **v0.15.3**; the current images are from v0.13.1, commit `0fe0fa9`). Pin the clock in the seed so timestamps don't churn.
+- **Version**: use the release the docs describe for new captures. Fifty unchanged slots retain their v0.13.1 images. Pin the clock in the seed so timestamps don't churn.
 - **Secrets**: any key or token shown must be a fake value (`omp_0000…`, `omp_sa_0000…`, `ompadm_0000…`, `omppub_0000…`, `ompwhs_0000…`, `ompscim_0000…`) before capture. An audit sink's signing secret is never shown in these slots; its host must read `siem.example.com` (a display-only edit if the capture receiver is on loopback).
 - **File name**: the slot name, `<slot>.png`, in the screenshots directory (`../omp-assets/screenshots` by default), then:
 
@@ -122,14 +122,14 @@ Every image in these docs has a named slot in `lib/screenshot-slots.json` (its a
 
 ## For v0.15.3
 
-**Pending recapture.** The docs describe v0.15.3, but every image was captured on v0.13.1. These slots show a page that changed since and must be retaken on v0.15.3 (then check each one's alt text in `lib/screenshot-slots.json` against the new image):
+The following 29 slots were retaken on v0.15.3. The captures use the Example Corp stack in `../omp-assets/capture/` with the portal image pinned to the published digest.
 
 - **Every admin page** (the admin sidebar gained the **Settings** group with Definition scanning, and **Audit stream** under Operations): 17 `gateway-access`, 29 `admin-users`, 30 `admin-user-detail`, 31 `admin-servers-review`, 33 `admin-publishing`, 34 `admin-internal-networks`, 35 `admin-trusted-clients`, 36 `admin-auth-providers`, 37 `admin-auth-provider-create`, 38 `admin-limits`, 39 `admin-retention`, 40 `admin-capture`, 41 `admin-usage`, 42 `admin-calls`, 43 `admin-audit`, 44 `admin-overview`, 45 `admin-notifications`, 46 `admin-automation-tokens`, 47 `admin-automation-token-created`, 60 `admin-approval-rules`, 64 `gateway-access-requests`, 75 `admin-auth-provider-access`, 76 `admin-governance`, 77 `admin-provisioning`, 78 `admin-provisioning-people`.
 - **The approve dialog**, 32 `admin-server-review-dialog`: it now starts with the server's Definition scan findings and Rescan definitions (and the admin sidebar behind it changed). Its alt text needs the findings.
 - **The Capabilities tab**, 8 `server-capabilities` and 68 `capability-classes`: the tab now has a Definition scan findings section, and the filter counts are part of their labels. The alt text of 8 quotes "Changed 1, Approved 5"; check how the labels read now.
 - **The publish dialog**, 13 `publish-request`: it now starts with the server's Definition scan findings and Rescan definitions. Its alt text needs the findings.
 
-The other 50 slots (the workspace, account, connect, consent and team pages) show pages whose visible content didn't change since v0.13.1 and can stay until the next full recapture. Slots 80 to 83 are new placeholders.
+The other 50 slots retain their v0.13.1 captures. Slots 80–83 were captured on v0.15.3. The audit receiver verified the webhook signatures, including the oversized envelope. The held-row capture scrolls the sinks table horizontally to show the delivery result and acknowledgement action.
 
 ## For v0.13.1
 
