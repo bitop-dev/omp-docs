@@ -57,7 +57,7 @@ Errors to know:
 
 ## What each scope allows
 
-**`platform:read`** acts as a platform auditor: it can call every read-only `GET /v1/admin/…` operation **except recorded call contents**. That covers users, teams, servers and their capabilities and health, publishing, network, limits, retention and capture settings, gateways and their grants, calls and usage, trusted clients, auth providers (without secrets), connections, the audit log, the [overview](/docs/administer/overview), notification settings, platform notification destinations and their deliveries, and the token list.
+**`platform:read`** acts as a platform auditor: it can call every read-only `GET /v1/admin/…` operation **except recorded call contents**. That covers users, teams, servers and their capabilities and health, publishing, network, limits, retention and capture settings, gateways and their grants, calls and usage, trusted clients, auth providers (without secrets), connections, the audit log, the [overview](/docs/administer/overview), notification settings, platform notification destinations and their deliveries, and the token list. Since v0.14.0 it also pulls the [audit stream](/docs/operate/audit-stream#pulling-the-stream): the stream, its tip and status, verify and full entries, and the collector acknowledgement (`POST /v1/admin/audit/stream/ack`, the one write it can make). It can't read definition scanning's settings, rules or findings, or the audit sinks' and pull consumers' configuration: those need a browser session.
 
 **`platform:write`** acts as a platform admin, but only for provisioning that can be undone and doesn't change who is trusted:
 
