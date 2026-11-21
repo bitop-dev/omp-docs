@@ -472,5 +472,29 @@
       "oauth-consent-scope"
     ],
     "alt": "The same consent page scrolled to the end: what the app will be able to do, the Requested tool scope (Everything; \"You may narrow the requested classes, never add to them\"), the Tool scope choice Everything, Read only or Custom, the account Sam is signed in as, and Deny and Allow."
+  },
+  "capability-scan-findings": {
+    "files": [
+      "capability-scan-findings"
+    ],
+    "alt": "Status › Capabilities, as Priya Shah, scrolled to Definition scan findings: the note \"Shadow mode only: findings inform review; nothing is blocked, redacted or rewritten.\" with the link What scanning will not catch, the Rescan definitions button, and one entry per capability with \"Ruleset v1\" and its scan time. check_outage and search_tickets say \"Heuristics found nothing in this definition (ruleset v1). This does not mean the definition is safe.\"; create_ticket lists two findings, poison.precondition and poison.external_url, each with Group: poison, Severity: info, Count: 1 and Location /description."
+  },
+  "admin-definition-scanning": {
+    "files": [
+      "admin-definition-scanning"
+    ],
+    "alt": "Admin › Definition scanning, as Morgan Lee: the description \"Local heuristics for stored capability definitions. Shadow mode only; nothing is blocked, redacted or rewritten.\", the link What scanning will not catch, the Scanning mode section with Definition scanning mode set to Shadow, and the Rule catalog (Read only · Ruleset v1) listing rules such as secret.private_key_pem and secret.bearer with their group and severity. The admin sidebar shows the Settings group with Definition scanning selected, and Audit stream under Operations."
+  },
+  "admin-audit-stream": {
+    "files": [
+      "admin-audit-stream"
+    ],
+    "alt": "Admin › Audit stream, as Morgan Lee: \"Tamper-evident with pinned keys and stream id. Independently preserve and verify evidence at the receiver.\" and the link Receiver verification and key enrollment; the Stream status card with the stream id, epoch 1, the last and earliest sequences, Sealer (this replica) On, Stream state running, Checkpoints Enabled with the last checkpoint sequence and age, the active key id and fingerprint, Sinks gate Enabled with its minimum reader version, and the link Public checkpoint keys; the Sinks card with Create sink and one required Full sink, SIEM, to siem.example.com, active and enabled, lag 0, a recent last success and \"Holding — retention waits for this cursor.\"; and the Pull consumers card with Register consumer and the optional summary consumer archive."
+  },
+  "audit-stream-held-row": {
+    "files": [
+      "audit-stream-held-row"
+    ],
+    "alt": "The Sinks table on Admin › Audit stream, as Morgan Lee: the required Full sink SIEM held at an oversized row. Its Held oversized sequence column shows the sequence number and \"Sent to the receiver\" with a time and \"Not resent while held.\", its retention effect is \"Holding — retention waits for this cursor.\", and its actions include Acknowledge oversized next to Edit, Test, Rotate secret and Delete."
   }
 }
