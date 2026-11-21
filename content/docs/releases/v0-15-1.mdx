@@ -1,0 +1,66 @@
+---
+title: v0.15.1
+description: "Open MCP Portal v0.15.1 (2026-11-06), the first published 0.15 release: signed audit checkpoints and audit webhook sinks with the Admin › Audit stream page, both off until enabled. Migrations 00063 and 00064. v0.15.0 was tagged but never published."
+---
+
+**Released 2026-11-06.** [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.1) · image `ghcr.io/ncecere/open-mcp-portal:v0.15.1` · migrations `00063` and `00064` (expand-only).
+
+<Callout title="v0.15.0 was never published">
+The v0.15.0 tag exists, but its release image failed the vulnerability scan (CVE-2026-78661, HIGH, in `golang.org/x/net`), so no image, binaries or GitHub release were published for it. v0.15.1 is v0.15.0 with that dependency fixed. Wherever a minimum version below says 0.15.0, any published 0.15 release qualifies.
+</Callout>
+
+The first published release of the v0.15 line, after [v0.14.0](/docs/releases/v0-14-0). It completes the second slice of audit streaming (#38): **signed checkpoints** let a receiver anchor audit history without trusting the database, and **webhook sinks** push the sealed stream to a SIEM. **Both stay off until an operator enables them,** after every replica runs this release. Read [Upgrading](#upgrading) first.
+
+## What changed
+
+- **Signed audit checkpoints.** The sealer signs where the chain stands with a dedicated Ed25519 key of the install (never the key that signs identity tokens), every 10,000 entries or every 15 minutes when there was activity. The key is sealed with `ENCRYPTION_KEY` and covered by `rotate-keys`; its public half, with the range of sequence numbers it may sign, is published at `/.well-known/omp-audit-keys.json`. `open-mcp-portal audit-stream rotate-checkpoint-key` hands over to a new key in one dual-signed step. `GET /v1/admin/audit/verify` checks the signatures. Turn them on with `audit-stream enable-checkpoints --min-reader-version-ack`. See [Signed checkpoints](/docs/operate/audit-stream#signed-checkpoints).
+- **Audit webhook sinks.** The portal POSTs sealed audit records to a receiver as NDJSON, in sequence order and at least once, HMAC-signed like notification webhooks, with no redirects and no proxies, and TLS always verified. Destinations must be public https addresses unless `AUDIT_STREAM_ALLOWED_NETWORKS` allows an internal one. A **required** sink holds audit retention at its position, even while disabled; an **optional** one doesn't, and stops if it falls behind what retention kept until an admin resumes it. Turn delivery on with `audit-stream enable-sinks --min-reader-version-ack`. See [Webhook sinks](/docs/operate/audit-stream#webhook-sinks).
+- **Admin › Audit stream.** Platform admins create, edit, test, rotate, resume and delete sinks, acknowledge held oversized rows and register pull consumers; auditors see the page read-only. It shows the stream and checkpoint state, each sink's lag, last success and effect on retention. Platform admins get two new notifications, `audit.sink_failing` (at the third failure in a row) and `audit.sink_recovered`. See [Audit stream](/docs/administer/audit-stream).
+- **Smaller:** capability filter counts on the Capabilities tab are part of the filter labels, for screen readers; audit log entries about sinks, the stream gates and checkpoint keys show live labels; `golang.org/x/net` v0.62.0 (CVE-2026-78661).
+
+## Upgrading
+
+1. **Back up** the database with its keys, then pin the new image (verify its signature first, see [The image](#the-image)). `migrate` applies `00063` and `00064`.
+2. **Nothing else changes until you enable it.** Checkpoints and sinks stay off; v0.14.0 replicas keep working against the new schema during the rollout.
+3. **Enable checkpoints only after every replica runs 0.15.** It is a **one-way** step: v0.14.0 can't read checkpoint records, so after it never roll back below the version the command records.
+4. **Enable sinks only after every replica runs 0.15.** To roll back below it later, first run `audit-stream disable-sinks`, stop the senders and let this release deliver its pending sink notifications.
+5. **Retire an old `ENCRYPTION_KEY` only with this release's `rotate-keys`.** Older ones don't know the checkpoint key or the sink secrets.
+
+[Upgrading from v0.14.0](/docs/operate/migrations-and-upgrades#upgrading-from-v0140) has the same points with the details.
+
+## Verification
+
+The release, its image and the six command-line binaries were tested and independently verified; the published image enabled checkpoints and sinks, delivered signed batches to a test receiver and rotated a checkpoint key. The [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.1) and the [release notes](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.1/docs/releases/v0.15.1.md) record how.
+
+## Known limitations
+
+Carried over from [v0.14.0](/docs/releases/v0-14-0#known-limitations) unless marked new:
+
+- **Webhook sinks only (new).** No syslog or OTLP sinks and no bulk exports; no per-team sinks, custom CAs or mTLS for sinks.
+- **A held oversized row is resent (new).** A required full-profile sink held at an oversized row sends that row's envelope on every pass until it is acknowledged (fixed in [v0.15.3](/docs/releases/v0-15-3)).
+- **Not tested with a real SIEM (new)**, and the Audit stream page's dialogs haven't had a manual screen-reader review.
+- **Tamper-evident, not tamper-proof (new).** Someone who controls the running portal holds the signing key; earlier off-host copies and checkpoints bound how far back they can rewrite.
+- **Scanning is heuristic and shadow only.**
+- **Real-world checks are still open** ([roadmap](/docs/releases/roadmap#real-world-verification)).
+
+## The image
+
+`ghcr.io/ncecere/open-mcp-portal:v0.15.1` is signed with cosign keyless signing by the repository's `image.yml` workflow. Its digest is:
+
+```text
+sha256:40b8bf0ddbc763c3d61080de60df5addc71b8a0ab6c8db1dc99d452b93f744c2
+```
+
+Check the signature with **cosign v3.0 or newer**, then pin the image by that digest:
+
+```sh
+cosign verify ghcr.io/ncecere/open-mcp-portal@sha256:40b8bf0ddbc763c3d61080de60df5addc71b8a0ab6c8db1dc99d452b93f744c2 \
+  --certificate-identity https://github.com/ncecere/open-mcp-portal/.github/workflows/image.yml@refs/tags/v0.15.1 \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+The `omp` binaries are signed by the same workflow; [The omp command line](/docs/api/cli) shows how to check one with `cosign verify-blob`. See [Install with Docker Compose](/docs/operate/compose) and [Install on Kubernetes](/docs/operate/kubernetes).
+
+## Reporting problems
+
+Open an issue at [github.com/bitop-dev/open-mcp-portal/issues](https://github.com/bitop-dev/open-mcp-portal/issues) (there is a form for each kind) or ask in [Discussions](https://github.com/bitop-dev/open-mcp-portal/discussions). Report security problems privately, as [`SECURITY.md`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.1/SECURITY.md) describes.
