@@ -8,29 +8,27 @@ description: Pull and verify the Open MCP Portal image, try the demo, and run a 
 Each release publishes a multi-arch (linux/amd64, linux/arm64) image to GitHub's container registry, tagged with the release:
 
 ```sh
-docker pull ghcr.io/ncecere/open-mcp-portal:v0.15.3
-docker run --rm ghcr.io/ncecere/open-mcp-portal:v0.15.3 version     # open-mcp-portal 0.15.3 (<commit>)
+docker pull ghcr.io/bitop-dev/open-mcp-portal:v0.15.3
+docker run --rm ghcr.io/bitop-dev/open-mcp-portal:v0.15.3 version     # open-mcp-portal 0.15.3 (<commit>)
 ```
 
 The digest of the v0.15.3 image is:
 
-{/* RELEASE-TODO: v0.15.3 digest (this and the next three are v0.15.2's) */}
-
 ```text
-sha256:e30bef6f56de186a39431ecde67a35dc155d5c33e597918a47a3a0644a8c2c28
+sha256:bae00dfda49eec8ed3dc0625b8276f677259d763da9f2904fd1ab8fab3212afa
 ```
 
 The image is scanned for known vulnerabilities before it is published, carries an SBOM and build provenance, and is signed with cosign keyless signing by the repository's `image.yml` workflow. Check the signature (use **cosign v3.0 or newer**) before you use it:
 
 ```sh
-cosign verify ghcr.io/ncecere/open-mcp-portal@sha256:e30bef6f56de186a39431ecde67a35dc155d5c33e597918a47a3a0644a8c2c28 \
+cosign verify ghcr.io/bitop-dev/open-mcp-portal@sha256:bae00dfda49eec8ed3dc0625b8276f677259d763da9f2904fd1ab8fab3212afa \
   --certificate-identity https://github.com/bitop-dev/open-mcp-portal/.github/workflows/image.yml@refs/tags/v0.15.3 \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
-The repository moved from `github.com/ncecere/open-mcp-portal` to `github.com/bitop-dev/open-mcp-portal`, so the signing identity moved with it: releases up to v0.15.2 were signed as `https://github.com/ncecere/open-mcp-portal/.github/workflows/image.yml@refs/tags/<tag>`. Use the identity of the repository that published the tag you verify. The image name, `ghcr.io/ncecere/open-mcp-portal`, didn't change.
+The repository moved from `github.com/ncecere/open-mcp-portal` to `github.com/bitop-dev/open-mcp-portal`, so the signing identity moved with it: releases up to v0.15.2 were signed as `https://github.com/ncecere/open-mcp-portal/.github/workflows/image.yml@refs/tags/<tag>`. Use the identity of the repository that published the tag you verify. Use `ghcr.io/bitop-dev/open-mcp-portal` for v0.15.3 onward and `ghcr.io/ncecere/open-mcp-portal` for older releases.
 
-Then pin the image by that digest (`ghcr.io/ncecere/open-mcp-portal@sha256:e30bef6f56de186a39431ecde67a35dc155d5c33e597918a47a3a0644a8c2c28`) in your Compose file, so a moved tag can't change what you run. `docker buildx imagetools inspect ghcr.io/ncecere/open-mcp-portal:v0.15.3` shows the digest a tag points to now; compare it with the one above.
+Then pin the image by that digest (`ghcr.io/bitop-dev/open-mcp-portal@sha256:bae00dfda49eec8ed3dc0625b8276f677259d763da9f2904fd1ab8fab3212afa`) in your Compose file, so a moved tag can't change what you run. `docker buildx imagetools inspect ghcr.io/bitop-dev/open-mcp-portal:v0.15.3` shows the digest a tag points to now; compare it with the one above.
 
 To build the image yourself instead, from a checkout of the tag:
 
@@ -72,7 +70,7 @@ services:
       retries: 30
 
   portal:
-    image: ghcr.io/ncecere/open-mcp-portal@sha256:e30bef6f56de186a39431ecde67a35dc155d5c33e597918a47a3a0644a8c2c28   # v0.15.3
+    image: ghcr.io/bitop-dev/open-mcp-portal@sha256:bae00dfda49eec8ed3dc0625b8276f677259d763da9f2904fd1ab8fab3212afa   # v0.15.3
     command: ["serve"]
     depends_on:
       postgres:

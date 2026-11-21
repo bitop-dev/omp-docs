@@ -3,13 +3,11 @@ title: Releases
 description: "Open MCP Portal's releases, which versions are supported, what to expect before 1.0, and how releases are published."
 ---
 
-{/* RELEASE-TODO: add v0.15.3's release date to the next line, and replace YYYY-MM-DD in the table */}
-
-These docs describe **v0.15.3** ([GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.3)). The full history is in the repository's [changelog](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/CHANGELOG.md) and [releases](https://github.com/bitop-dev/open-mcp-portal/releases). What comes next is on the [roadmap](/docs/releases/roadmap).
+These docs describe **v0.15.3**, released on 2026-11-21 ([GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.3)). The full history is in the repository's [changelog](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/CHANGELOG.md) and [releases](https://github.com/bitop-dev/open-mcp-portal/releases). What comes next is on the [roadmap](/docs/releases/roadmap).
 
 | Release | Date | In short |
 |---|---|---|
-| [v0.15.3](/docs/releases/v0-15-3) | YYYY-MM-DD | Built with Go 1.26.11 (GO-2026-6859); `DATABASE_MAX_CONNS`; provider credential fixes; retention purges that don't read the whole call log; held audit rows sent once. Migrations `00066` and `00067`. |
+| [v0.15.3](/docs/releases/v0-15-3) | 2026-11-21 | Built with Go 1.26.11 (GO-2026-6859); `DATABASE_MAX_CONNS`; provider credential fixes; retention purges that don't read the whole call log; held audit rows sent once. Migrations `00066` and `00067`. |
 | [v0.15.2](/docs/releases/v0-15-2) | 2026-11-10 | A hardening pass with no behaviour change: fewer database round trips per gateway request, a compressed web app, faster admin queries. Migration `00065` (indexes only). |
 | [v0.15.1](/docs/releases/v0-15-1) | 2026-11-06 | Signed audit checkpoints and audit webhook sinks with Admin › Audit stream, both off until enabled. Migrations `00063` and `00064`. |
 | v0.15.0 | 2026-11-06 | **Tagged, never published:** its image failed the vulnerability scan. v0.15.1 replaces it. |
@@ -51,17 +49,17 @@ Before 1.0, only the **latest minor release** is supported: fixes, security or o
 
 ## How releases are published
 
-Each release is a Git tag, `vX.Y.Z`, with an entry in the repository's `CHANGELOG.md`, notes in `docs/releases/` and a GitHub release. The project follows Semantic Versioning. Releasing a tag publishes the container image `ghcr.io/ncecere/open-mcp-portal:vX.Y.Z` for amd64 and arm64, signed with cosign keyless signing by the repository's `image.yml` workflow, with its SBOM and build provenance attached as attestations. The GitHub release attaches:
+Each release is a Git tag, `vX.Y.Z`, with an entry in the repository's `CHANGELOG.md`, notes in `docs/releases/` and a GitHub release. The project follows Semantic Versioning. Releasing a tag publishes the container image `ghcr.io/bitop-dev/open-mcp-portal:vX.Y.Z` for amd64 and arm64, signed with cosign keyless signing by the repository's `image.yml` workflow, with its SBOM and build provenance attached as attestations. The GitHub release attaches:
 
 - `open-mcp-portal-vX.Y.Z.digest.txt`: the image digest to pin;
 - SPDX SBOMs for the image and each platform;
 - since v0.10.0, the `omp` command line for Linux, macOS and Windows on amd64 and arm64, each with a cosign bundle (`.sigstore.json`);
 - `checksums.txt` for the files.
 
-Check the image's signature with cosign v3.0 or newer before you deploy, and deploy by digest. The certificate identity names the repository that published the tag: `bitop-dev/open-mcp-portal` from v0.15.3 on, `ncecere/open-mcp-portal` (the repository's old address) up to v0.15.2. The image name stayed `ghcr.io/ncecere/open-mcp-portal`.
+Check the image's signature with cosign v3.0 or newer before you deploy, and deploy by digest. The certificate identity names the repository that published the tag: `bitop-dev/open-mcp-portal` from v0.15.3 on, `ncecere/open-mcp-portal` (the repository's old address) up to v0.15.2. The image uses `ghcr.io/bitop-dev/open-mcp-portal` from v0.15.3 onward. Earlier releases use `ghcr.io/ncecere/open-mcp-portal`.
 
 ```sh
-cosign verify ghcr.io/ncecere/open-mcp-portal@sha256:<digest> \
+cosign verify ghcr.io/bitop-dev/open-mcp-portal@sha256:<digest> \
   --certificate-identity https://github.com/bitop-dev/open-mcp-portal/.github/workflows/image.yml@refs/tags/vX.Y.Z \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```

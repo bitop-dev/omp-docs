@@ -18,7 +18,7 @@ export const gitConfig = {
 
 /**
  * The product's repository. It moved from github.com/ncecere/open-mcp-portal,
- * which still redirects here; the container image keeps its name (below).
+ * which still redirects here. The container image moved in v0.15.3.
  */
 export const productRepo = 'https://github.com/bitop-dev/open-mcp-portal';
 
@@ -26,22 +26,20 @@ export const productRepo = 'https://github.com/bitop-dev/open-mcp-portal';
 export const productVersion = 'v0.15.3';
 
 /**
- * The date that release was tagged (YYYY-MM-DD).
- * RELEASE-TODO: still v0.15.2's date; set v0.15.3's after publication.
+ * The date the release was published (YYYY-MM-DD).
  */
-export const productReleaseDate = '2026-11-10';
+export const productReleaseDate = '2026-11-21';
 
 /** The release's page on GitHub. */
 export const productReleaseUrl = `${productRepo}/releases/tag/${productVersion}`;
 
 /** The release's container image, signed with cosign keyless signing. */
-export const productImage = `ghcr.io/ncecere/open-mcp-portal:${productVersion}`;
+export const productImage = `ghcr.io/bitop-dev/open-mcp-portal:${productVersion}`;
 
 /**
  * The digest of the release's image (verify the signature, then pin this).
- * RELEASE-TODO: still v0.15.2's digest; set v0.15.3's after publication.
  */
-export const productImageDigest = 'sha256:e30bef6f56de186a39431ecde67a35dc155d5c33e597918a47a3a0644a8c2c28';
+export const productImageDigest = 'sha256:bae00dfda49eec8ed3dc0625b8276f677259d763da9f2904fd1ab8fab3212afa';
 
 export const appName = 'Open MCP Portal docs';
 export const docsRoute = '/docs';

@@ -5,7 +5,7 @@ description: Every Open MCP Portal setting, its default and bounds, from environ
 
 Open MCP Portal reads its settings when it starts. Everything else (publishing policy and server review intervals, internal networks, trusted clients, auth providers, limits, retention, redaction patterns, approval rules, gateway access requests, provisioning (SCIM), definition scanning, audit sinks and pull consumers, and each server's protection limits and endpoints) is set in the web app or the management API and stored in PostgreSQL. None of those has an environment variable.
 
-These are the settings of Open MCP Portal v0.15.3, in the image `ghcr.io/ncecere/open-mcp-portal:v0.15.3` ([verify its signature](/docs/operate/compose#the-image)).
+These are the settings of Open MCP Portal v0.15.3, in the image `ghcr.io/bitop-dev/open-mcp-portal:v0.15.3` ([verify its signature](/docs/operate/compose#the-image)).
 
 ## Where settings come from
 
@@ -26,7 +26,7 @@ An invalid value stops the process with a message naming the setting. `open-mcp-
 | `APP_URL` | none (required by `serve`) | The public origin people and MCP clients use, such as `https://mcp.example.com`: scheme and host (and port), no path. Used for cookies, sign-in redirects, `Origin` checks, the identity token's `iss`, gateway URLs and OAuth metadata. Must be https unless it's a loopback address |
 | `LISTEN_ADDR` | `:8088` | The HTTP listener |
 | `DATABASE_URL` (secret) | none (required by `serve`) | The runtime connection: `postgres://user:pass@host:5432/db?sslmode=require`; URL-encode the password. `serve`, `doctor` and `rotate-keys` use it. `migrate` uses it only when `DATABASE_MIGRATE_URL` is empty |
-| `DATABASE_MAX_CONNS` | `20` | Connections in each replica's serving pool, 4 to 1000; an invalid value stops startup. Unset, a `pool_max_conns` in `DATABASE_URL` is kept; set, this wins. A provider token refresh holds a connection for up to 10 seconds while the identity provider answers, so a slow provider can take several. Size PostgreSQL's `max_connections` (or your pooler) for replicas × this, plus the migration job and `doctor` ([Scaling](/docs/operate/scaling#the-database)). Added in v0.15.3; before, the pool was the driver's default, the larger of 4 and the number of CPUs |
+| `DATABASE_MAX_CONNS` | `20` | Connections in each replica's serving pool, 4 to 1000; an invalid value stops startup. Unset, a `pool_max_conns` in `DATABASE_URL` is kept; set, this wins. A provider token refresh holds a connection for up to 10 seconds while the identity provider answers, so a slow provider can take several. Size PostgreSQL's `max_connections` (or your pooler) for replicas × this, including any rollout surge replicas, plus migration init containers and `doctor` ([Scaling](/docs/operate/scaling#the-database)). Added in v0.15.3; before, the pool was the driver's default, the larger of 4 and the number of CPUs |
 | `MIGRATE_ON_START` | `false` | Apply migrations when `serve` starts. For a single instance only; otherwise run `migrate` first |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn` or `error` |
 | `LOG_FORMAT` | `json` | `json` or `text`, on stdout |

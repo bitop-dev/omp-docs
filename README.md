@@ -2,7 +2,7 @@
 
 The user, team, administrator, operator and server-author documentation for [Open MCP Portal](https://github.com/bitop-dev/open-mcp-portal), the self-hosted portal to a company's MCP servers: teams register servers, publish them to a catalog and curate gateways that people and agents connect to. It's published at <https://docs.omp.bitop.dev>; the product's website is <https://omp.bitop.dev>. Both addresses, the repositories and the release the docs describe are in `lib/site.ts`.
 
-These pages are for the people who use gateways, the team owners and admins who register servers and build gateways, platform admins, operators, and MCP server authors. The Open MCP Portal repository's own `docs/` folder stays the engineering record (design, decisions and "As built" notes). The docs describe **Open MCP Portal v0.15.3**; the product tag is `v0.15.3`. (Its publication date and image digest are filled in after the release is published: see `RELEASE-TODO.md` while it exists.)
+These pages are for the people who use gateways, the team owners and admins who register servers and build gateways, platform admins, operators, and MCP server authors. The Open MCP Portal repository's own `docs/` folder stays the engineering record (design, decisions and "As built" notes). The docs describe **Open MCP Portal v0.15.3**, released on 2026-11-21.
 
 A static site: [Fumadocs](https://fumadocs.dev) on Next.js with `output: "export"`, TypeScript and Tailwind CSS v4, served by nginx in a container. Search is Fumadocs' built-in static index, searched in the browser. No tracking, no cookies, no external fonts or CDNs: Inter is self-hosted.
 
@@ -116,8 +116,10 @@ nginx (Alpine, pinned by digest) runs as user 101 on port 8080, keeps its pid an
 
 Pushes to `main` run `.github/workflows/publish.yaml`: it type-checks, builds (including `check-names`) and link-checks the site, then builds and pushes a multi-arch image (linux/amd64, linux/arm64):
 
-- `ghcr.io/ncecere/omp-docs:<full commit sha>`
-- `ghcr.io/ncecere/omp-docs:latest`
+- `ghcr.io/bitop-dev/omp-docs:<full commit sha>`
+- `ghcr.io/bitop-dev/omp-docs:latest`
+
+Existing deployments that use `ghcr.io/ncecere/omp-docs` need their image reference updated to `ghcr.io/bitop-dev/omp-docs`.
 
 Pull requests run the checks only. Actions are pinned by commit SHA, and Dependabot opens grouped weekly updates for npm, Actions and the Docker base images.
 

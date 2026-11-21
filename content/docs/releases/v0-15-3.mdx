@@ -3,9 +3,7 @@ title: v0.15.3
 description: "Open MCP Portal v0.15.3, the release these docs describe: built with Go 1.26.11 for GO-2026-6859, a setting for the database pool size, provider credential fixes, retention purges that no longer read the whole call log, and held audit rows sent once. Migrations 00066 and 00067."
 ---
 
-{/* RELEASE-TODO: replace YYYY-MM-DD with the publication date. */}
-
-**Released YYYY-MM-DD.** [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.3) · image `ghcr.io/ncecere/open-mcp-portal:v0.15.3` · migrations `00066` and `00067` (expand-only; the schema is at `00067`).
+**Released 2026-11-21.** [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.3) · image `ghcr.io/bitop-dev/open-mcp-portal:v0.15.3` · migrations `00066` and `00067` (expand-only; the schema is at `00067`).
 
 **These docs describe v0.15.3.** It is a patch for [v0.15.2](/docs/releases/v0-15-2) with a security rebuild, one new setting and three fixes. Read [Upgrading](#upgrading): the new database pool size can need more PostgreSQL connections than before.
 
@@ -24,7 +22,7 @@ description: "Open MCP Portal v0.15.3, the release these docs describe: built wi
 
 From v0.15.2:
 
-1. **Check PostgreSQL's connection limit first.** Each replica now opens up to `DATABASE_MAX_CONNS` (20) serving connections, where it used to open the larger of 4 and its CPU count. Make sure `max_connections` (or your pooler) allows **replicas × pool size**, plus the migration job and `doctor`. Set `DATABASE_MAX_CONNS` lower if it doesn't; a `pool_max_conns` you set in `DATABASE_URL` keeps working while the setting is unset. An invalid value stops the portal at startup.
+1. **Check PostgreSQL's connection limit first.** Each replica now opens up to `DATABASE_MAX_CONNS` (20) serving connections, where it used to open the larger of 4 and its CPU count. Make sure `max_connections` (or your pooler) allows **replicas × pool size**, including a surge replica, plus the migration init containers and `doctor`. Set `DATABASE_MAX_CONNS` lower if it doesn't; a `pool_max_conns` you set in `DATABASE_URL` keeps working while the setting is unset. An invalid value also stops the Kubernetes migration init container. Check its logs if the pod stays in `Init:Error`.
 2. **Back up** the database with its keys, then pin the new image (verify its signature first, see [The image](#the-image)). `migrate` applies `00066` (the call-record purge function, restated with the same signature and permissions, and an index on recorded contents built concurrently) and `00067` (a protected table for held rows and three restated sink functions).
 3. **v0.15.2 replicas keep working** against the new schema during the rollout, and rolling back to v0.15.2 needs nothing. Neither migration needs a gate. While a v0.15.2 replica is the sink sender, it keeps resending a held envelope as before; receivers already discard identical duplicates.
 
@@ -44,9 +42,7 @@ The migrations of every release in between apply in order in one `migrate` run (
 
 ## Verification
 
-{/* RELEASE-TODO: describe the verification once the release is published (as on the other release pages). */}
-
-The release's tests, image and command-line binaries are verified as for every release; the [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.3) and the [release notes](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/docs/releases/v0.15.3.md) record how.
+CI and the Kubernetes smoke, upgrade, and load gates passed. A three-replica Spark rehearsal with separate database roles passed the upgrade and two rollback and roll-forward cycles. After publication, an anonymous pull by digest, the image signature, both architectures' SBOM and provenance attestations, and all six CLI signatures were verified. The [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.3#evidence) records the checks.
 
 ## Known limitations
 
@@ -64,18 +60,16 @@ These apply to v0.15.3 as a whole:
 
 ## The image
 
-{/* RELEASE-TODO: replace both <v0.15.3 digest> placeholders with the published digest, and confirm the certificate identity the publication printed. */}
-
-`ghcr.io/ncecere/open-mcp-portal:v0.15.3` is signed with cosign keyless signing by the repository's `image.yml` workflow, now published from `github.com/bitop-dev/open-mcp-portal`. Its digest is:
+`ghcr.io/bitop-dev/open-mcp-portal:v0.15.3` is signed with cosign keyless signing by the repository's `image.yml` workflow, now published from `github.com/bitop-dev/open-mcp-portal`. Its digest is:
 
 ```text
-sha256:<v0.15.3 digest>
+sha256:bae00dfda49eec8ed3dc0625b8276f677259d763da9f2904fd1ab8fab3212afa
 ```
 
 Check the signature with **cosign v3.0 or newer**, then pin the image by that digest:
 
 ```sh
-cosign verify ghcr.io/ncecere/open-mcp-portal@sha256:<v0.15.3 digest> \
+cosign verify ghcr.io/bitop-dev/open-mcp-portal@sha256:bae00dfda49eec8ed3dc0625b8276f677259d763da9f2904fd1ab8fab3212afa \
   --certificate-identity https://github.com/bitop-dev/open-mcp-portal/.github/workflows/image.yml@refs/tags/v0.15.3 \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
