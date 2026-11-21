@@ -1,0 +1,58 @@
+---
+title: v0.15.2
+description: "Open MCP Portal v0.15.2 (2026-11-10): a hardening pass with no behaviour change: fewer database round trips per gateway request, a compressed web app and faster admin queries. Migration 00065 (indexes only)."
+---
+
+**Released 2026-11-10.** [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.2) · image `ghcr.io/ncecere/open-mcp-portal:v0.15.2` · migration `00065` (indexes only).
+
+A patch for [v0.15.1](/docs/releases/v0-15-1). The gateway's request path does less work, the web app loads less and slow admin queries are fixed. **No feature, API, setting or behaviour changes,** and nothing that decides who may call what is cached: every access check is still read live.
+
+## What changed
+
+- **Faster gateway requests.** A `tools/call` makes about a third fewer database round trips (47 to 33 on a team gateway, 40 to 31 on a platform gateway) and a `tools/list` about 40% fewer. Evaluating a gateway with many curated tools no longer recompiles their schemas on every request.
+- **A lighter web app.** Its JavaScript, CSS and other text files are served gzipped to browsers that accept it (a first load transfers about 270 kB instead of about 970 kB), files without a hash in their name revalidate with an `ETag`, and the server and gateway pages load their Settings and Capabilities tabs when opened.
+- **Faster admin pages and jobs.** The audit log picks its page before resolving names (a first page that could take seconds on a large log takes milliseconds), purging old notification events no longer scans the delivery queue once per event, and filtering the call log by a failing outcome no longer reads every call.
+
+## Upgrading
+
+1. Pin the new image by its digest (verify its signature first, see [The image](#the-image)). `migrate` applies `00065`, which builds three indexes concurrently and is safe to rerun if interrupted.
+2. v0.15.1 replicas run unchanged against the new schema, and rolling back to v0.15.1 needs nothing. No setting changes.
+3. **Reverse proxies:** the app's static files now carry `Vary: Accept-Encoding` and, when compressed, `Content-Encoding: gzip`. API, MCP and streaming responses are unchanged and not compressed.
+
+[Upgrading from v0.15.1](/docs/operate/migrations-and-upgrades#upgrading-from-v0151) has the same points.
+
+## Verification
+
+The release, its image and the six command-line binaries were tested and independently verified, including the published image serving the compressed app; the [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.2) and the [release notes](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.2/docs/releases/v0.15.2.md) record how.
+
+## Known limitations
+
+Carried over from [v0.15.1](/docs/releases/v0-15-1#known-limitations) unless marked new:
+
+- **Every call opens its own connection to its MCP server (new to this list),** so a TLS handshake per call. Reusing connections is an open design decision (#105).
+- **A retention purge can read the whole call log (new to this list)** when a batch finds fewer rows than it asked for (fixed in [v0.15.3](/docs/releases/v0-15-3)).
+- **A provider token refresh holds a database connection** while it waits for the identity provider (#107; v0.15.3 makes the pool size a setting).
+- **A held oversized audit row is resent** on every pass until it is acknowledged (fixed in v0.15.3).
+- **Real-world checks are still open** ([roadmap](/docs/releases/roadmap#real-world-verification)).
+
+## The image
+
+`ghcr.io/ncecere/open-mcp-portal:v0.15.2` is signed with cosign keyless signing by the repository's `image.yml` workflow. Its digest is:
+
+```text
+sha256:e30bef6f56de186a39431ecde67a35dc155d5c33e597918a47a3a0644a8c2c28
+```
+
+Check the signature with **cosign v3.0 or newer**, then pin the image by that digest:
+
+```sh
+cosign verify ghcr.io/ncecere/open-mcp-portal@sha256:e30bef6f56de186a39431ecde67a35dc155d5c33e597918a47a3a0644a8c2c28 \
+  --certificate-identity https://github.com/ncecere/open-mcp-portal/.github/workflows/image.yml@refs/tags/v0.15.2 \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+The `omp` binaries are signed by the same workflow; [The omp command line](/docs/api/cli) shows how to check one with `cosign verify-blob`. See [Install with Docker Compose](/docs/operate/compose) and [Install on Kubernetes](/docs/operate/kubernetes).
+
+## Reporting problems
+
+Open an issue at [github.com/bitop-dev/open-mcp-portal/issues](https://github.com/bitop-dev/open-mcp-portal/issues) (there is a form for each kind) or ask in [Discussions](https://github.com/bitop-dev/open-mcp-portal/discussions). Report security problems privately, as [`SECURITY.md`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.2/SECURITY.md) describes.

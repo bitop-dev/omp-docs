@@ -18,6 +18,9 @@ Open MCP Portal is stateless: scale it horizontally. Any replica can serve any r
 | Usage rollups | Every 5 minutes | One replica at a time |
 | Old rate-limit windows; expired and idle sessions and consent links | Every minute; every 15 minutes | Every replica (idempotent deletes) |
 | SCIM clean-up of people the directory deleted | In bounded passes, retried until nothing is left | Every replica |
+| Definition scanning of stored definitions not yet scanned under the current ruleset | Every minute, in bounded passes | One replica at a time (advisory lock) |
+| Audit stream sealing, the daily safety sweep and signed checkpoints (with `AUDIT_STREAM_ENABLED`) | Every second; checkpoints every 10,000 entries or 15 minutes | One replica at a time (advisory lock `omp.auditstream`); replicas without the setting don't take part |
+| Audit sink delivery (with `AUDIT_STREAM_ENABLED`; it sends only once sinks are enabled) | Every second, with backoff per failing sink | One replica at a time (advisory lock `omp.auditsinks`, held on a connection of its own, outside the pool) |
 
 `omp_loop_leader{loop="retention"}`, `{loop="usage_rollup"}`, `{loop="notifications"}` and `{loop="governance"}` say which replica led each loop's latest run. Runs are short, so the gauge can be 1 on several replicas at once.
 
@@ -44,6 +47,6 @@ Shared in PostgreSQL: server quotas, and the open-task count of `TASKS_MAX_OPEN_
 
 ## The database
 
-Each replica holds a connection pool; size PostgreSQL's `max_connections` (or a pooler) for replicas × pool size. `omp_db_pool_*` metrics show how busy the pool is.
+Each replica holds a serving pool of `DATABASE_MAX_CONNS` connections (20 by default; before v0.15.3, the larger of 4 and the CPU count). Size PostgreSQL's `max_connections` (or a pooler) for replicas × pool size, including any rollout surge replicas, plus migration init containers, `doctor` and, with `AUDIT_STREAM_ENABLED`, the audit sink sender's own connection outside the pool. A provider token refresh holds a connection for as long as the identity provider takes to answer (up to 10 seconds), so a slow provider and a burst of refreshes can take several at once: raise the pool if `omp_db_pool_acquired_connections` stays near `omp_db_pool_max_connections` while providers are slow. The `OMPDBPoolSaturated` alert fires at 90% for 10 minutes.
 
 A call holds a request for up to its server's timeout (at most 120 seconds) and at most 1 MiB each way. Calls are buffered, except a `tools/call` that asks for progress, which is streamed (up to 64 progress events and 4 MiB) and needs an ingress that doesn't buffer: see [Ingress](/docs/operate/kubernetes#ingress).

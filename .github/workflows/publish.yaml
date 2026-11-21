@@ -79,7 +79,7 @@ jobs:
           push: true
           provenance: false
           tags: |
-            ghcr.io/ncecere/omp-docs:${{ github.sha }}
-            ghcr.io/ncecere/omp-docs:latest
+            ghcr.io/bitop-dev/omp-docs:${{ github.sha }}
+            ghcr.io/bitop-dev/omp-docs:latest
           labels: |
             org.opencontainers.image.revision=${{ github.sha }}

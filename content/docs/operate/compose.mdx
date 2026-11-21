@@ -8,30 +8,32 @@ description: Pull and verify the Open MCP Portal image, try the demo, and run a 
 Each release publishes a multi-arch (linux/amd64, linux/arm64) image to GitHub's container registry, tagged with the release:
 
 ```sh
-docker pull ghcr.io/ncecere/open-mcp-portal:v0.13.1
-docker run --rm ghcr.io/ncecere/open-mcp-portal:v0.13.1 version     # open-mcp-portal 0.13.1 (<commit>)
+docker pull ghcr.io/bitop-dev/open-mcp-portal:v0.15.3
+docker run --rm ghcr.io/bitop-dev/open-mcp-portal:v0.15.3 version     # open-mcp-portal 0.15.3 (<commit>)
 ```
 
-The digest of the v0.13.1 image is:
+The digest of the v0.15.3 image is:
 
 ```text
-sha256:cec6a9e1189845ca2f9827e972c55af20ce22de3a40645abdf3ab08a6730a453
+sha256:bae00dfda49eec8ed3dc0625b8276f677259d763da9f2904fd1ab8fab3212afa
 ```
 
 The image is scanned for known vulnerabilities before it is published, carries an SBOM and build provenance, and is signed with cosign keyless signing by the repository's `image.yml` workflow. Check the signature (use **cosign v3.0 or newer**) before you use it:
 
 ```sh
-cosign verify ghcr.io/ncecere/open-mcp-portal@sha256:cec6a9e1189845ca2f9827e972c55af20ce22de3a40645abdf3ab08a6730a453 \
-  --certificate-identity https://github.com/ncecere/open-mcp-portal/.github/workflows/image.yml@refs/tags/v0.13.1 \
+cosign verify ghcr.io/bitop-dev/open-mcp-portal@sha256:bae00dfda49eec8ed3dc0625b8276f677259d763da9f2904fd1ab8fab3212afa \
+  --certificate-identity https://github.com/bitop-dev/open-mcp-portal/.github/workflows/image.yml@refs/tags/v0.15.3 \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
-Then pin the image by that digest (`ghcr.io/ncecere/open-mcp-portal@sha256:cec6a9e1189845ca2f9827e972c55af20ce22de3a40645abdf3ab08a6730a453`) in your Compose file, so a moved tag can't change what you run. `docker buildx imagetools inspect ghcr.io/ncecere/open-mcp-portal:v0.13.1` shows the digest a tag points to now; compare it with the one above.
+The repository moved from `github.com/ncecere/open-mcp-portal` to `github.com/bitop-dev/open-mcp-portal`, so the signing identity moved with it: releases up to v0.15.2 were signed as `https://github.com/ncecere/open-mcp-portal/.github/workflows/image.yml@refs/tags/<tag>`. Use the identity of the repository that published the tag you verify. Use `ghcr.io/bitop-dev/open-mcp-portal` for v0.15.3 onward and `ghcr.io/ncecere/open-mcp-portal` for older releases.
+
+Then pin the image by that digest (`ghcr.io/bitop-dev/open-mcp-portal@sha256:bae00dfda49eec8ed3dc0625b8276f677259d763da9f2904fd1ab8fab3212afa`) in your Compose file, so a moved tag can't change what you run. `docker buildx imagetools inspect ghcr.io/bitop-dev/open-mcp-portal:v0.15.3` shows the digest a tag points to now; compare it with the one above.
 
 To build the image yourself instead, from a checkout of the tag:
 
 ```sh
-git clone --branch v0.13.1 https://github.com/ncecere/open-mcp-portal
+git clone --branch v0.15.3 https://github.com/bitop-dev/open-mcp-portal
 cd open-mcp-portal
 make docker                         # open-mcp-portal:<git describe>
 make docker-omp                     # omp-cli:<git describe>, the omp command line (docker build --target omp)
@@ -39,7 +41,7 @@ make docker-omp                     # omp-cli:<git describe>, the omp command li
 
 No image is published for the `omp` command line; each release attaches signed binaries instead ([The omp command line](/docs/api/cli#install)).
 
-- The image is distroless: the binary is `/open-mcp-portal` (the entrypoint) and there is no shell. Commands: `serve` (default), `migrate`, `doctor`, `rotate-keys`, `version`.
+- The image is distroless: the binary is `/open-mcp-portal` (the entrypoint) and there is no shell. Commands: `serve` (default), `migrate`, `doctor`, `rotate-keys`, `audit-stream`, `version`.
 - It runs as UID/GID 65532, listens on port 8088 (`LISTEN_ADDR`) and needs no writable filesystem.
 - There's no `HEALTHCHECK` (no shell or curl): probe `/healthz` and `/readyz` from your orchestrator.
 - Multi-arch: `docker buildx build --platform linux/amd64,linux/arm64 --build-arg VERSION=… --build-arg COMMIT=… .` The web app and Go builds run on the build platform and cross-compile.
@@ -68,7 +70,7 @@ services:
       retries: 30
 
   portal:
-    image: ghcr.io/ncecere/open-mcp-portal@sha256:cec6a9e1189845ca2f9827e972c55af20ce22de3a40645abdf3ab08a6730a453   # v0.13.1
+    image: ghcr.io/bitop-dev/open-mcp-portal@sha256:bae00dfda49eec8ed3dc0625b8276f677259d763da9f2904fd1ab8fab3212afa   # v0.15.3
     command: ["serve"]
     depends_on:
       postgres:

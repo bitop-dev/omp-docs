@@ -1,0 +1,61 @@
+---
+title: v0.14.0
+description: "Open MCP Portal v0.14.0 (2026-11-05): definition scanning in shadow mode, the first slice of audit streaming (off by default), and an audit retention floor. Migrations 00058 to 00062."
+---
+
+**Released 2026-11-05.** [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.14.0) · image `ghcr.io/ncecere/open-mcp-portal:v0.14.0` · migrations `00058` to `00062` (all expand-only; there is no `00057`).
+
+The first release of the v0.14 line, after [v0.13.1](/docs/releases/v0-13-1). It adds two features and a retention change that applies to everyone. **Definition scanning starts in shadow mode on upgrade; audit streaming stays off until an operator turns it on.** Read [Upgrading](#upgrading) first.
+
+## What changed
+
+- **Definition scanning, shadow only** (#72, #73). Every tool, prompt, resource and resource template definition is scanned with local heuristics when the server's capabilities are read: 32 rules (ruleset `v1`) in four groups, **secret** (credential shapes), **unicode** (hidden, bidirectional and look-alike characters), **poison** (English instruction phrasing such as "ignore previous instructions", text that hides things from the user, sensitive paths, external URLs, long encoded blobs) and **length**. Findings show on the server's **Capabilities** tab and in the publish, review and capability-change dialogs, with the rule, group, severity, count and location. **Nothing is blocked, redacted, rewritten or approved**, nothing is sent anywhere, and "found nothing" never means safe. Platform admins switch scanning between **Off** and **Shadow** under Admin › Settings › **Definition scanning**. See [Definition scan findings](/docs/teams/definition-scanning) and [Definition scanning](/docs/administer/definition-scanning).
+- **Audit streaming, first slice** (#38; off by default). With `AUDIT_STREAM_ENABLED=true`, a leader-elected sealer adds every audit entry to a gapless, hash-chained stream in a protected database schema. A collector pulls it off the host through `/v1/admin/audit/stream` with a platform automation token, verifies it and acknowledges what it stored. Once the stream has sealed anything, audit entries are deleted only as a sealed prefix that every *required* collector has acknowledged. New `open-mcp-portal audit-stream` commands show the stream's state and recover it after a restore or `pg_upgrade`. See [Audit stream for operators](/docs/operate/audit-stream).
+- **An audit retention floor** (H-10), whether or not streaming is on. Audit entries are kept at least as long as the longest call-record period (the platform's or any team's) and never less than `AUDIT_MIN_RETENTION_DAYS` (default 30, written by `migrate`). The database enforces it, and the retention settings refuse a period that would break it (`422 invalid_period`, reason `audit_interlock`). Malformed retention settings now fail closed instead of falling back to defaults. See [Retention](/docs/administer/retention#the-audit-floor).
+- **Concurrent migrations.** Replicas that start together no longer deadlock on the first index built concurrently: `migrate` polls for its lock instead of waiting on it.
+
+## Upgrading
+
+1. **Back up** the database with its keys, then pin the new image (verify its signature first, see [The image](#the-image)). `migrate` applies `00058` to `00062`; run it with the migration role as usual. Set `AUDIT_MIN_RETENTION_DAYS` in the **migrate** job's environment if you want a floor above 30 days.
+2. **v0.13.1 replicas keep working** against the new schema during the rollout, and rolling back to v0.13.1 after migrating is supported.
+3. **Scanning starts in Shadow.** A background pass scans the definitions you already have. To opt out, set Admin › Settings › Definition scanning to **Off**.
+4. **A retention settings conflict.** If a call-record period (platform or a team override) is already longer than the audit period, the next retention change is refused until you raise the audit period or lower the override. The database keeps audit entries that long either way.
+5. **Streaming is optional.** Turn it on only after the rollout, as [Audit stream for operators](/docs/operate/audit-stream#turning-on-sealing) describes. Once it is on, a rollback pauses audit deletion (nothing new is sealed), which is safe but costs storage.
+
+[Upgrading from v0.13.1](/docs/operate/migrations-and-upgrades#upgrading-from-v0131) has the same points with the details.
+
+## Verification
+
+The release, its image and the six command-line binaries were tested and independently verified, including the published image migrating and sealing against a fresh database; the [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.14.0) and the [release notes](https://github.com/bitop-dev/open-mcp-portal/blob/v0.14.0/docs/releases/v0.14.0.md) record how.
+
+## Known limitations
+
+Carried over from [v0.13.1](/docs/releases/v0-13-1#known-limitations) unless marked new:
+
+- **Scanning is heuristic and shadow only (new).** The rules are public, English-only and lexical; paraphrase, other languages, encodings and split payloads pass. Nothing scans call arguments or results.
+- **Streaming is pull only (new).** No push sinks and no signed checkpoints yet (they came in [v0.15.1](/docs/releases/v0-15-1)); no syslog, OTLP or bulk export.
+- **The scanning panels were checked in tests only (new),** not in a real browser or with a screen reader.
+- **Real-world checks are still open** ([roadmap](/docs/releases/roadmap#real-world-verification)).
+- Remote servers only (no stdio); development software that has not run in production.
+
+## The image
+
+`ghcr.io/ncecere/open-mcp-portal:v0.14.0` is signed with cosign keyless signing by the repository's `image.yml` workflow. Its digest is:
+
+```text
+sha256:11f89d86684f7201311979f88b47012660d7d6cd528f954eeb20e87a01f9978d
+```
+
+Check the signature with **cosign v3.0 or newer**, then pin the image by that digest:
+
+```sh
+cosign verify ghcr.io/ncecere/open-mcp-portal@sha256:11f89d86684f7201311979f88b47012660d7d6cd528f954eeb20e87a01f9978d \
+  --certificate-identity https://github.com/ncecere/open-mcp-portal/.github/workflows/image.yml@refs/tags/v0.14.0 \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+The `omp` binaries are signed by the same workflow; [The omp command line](/docs/api/cli) shows how to check one with `cosign verify-blob`. See [Install with Docker Compose](/docs/operate/compose) and [Install on Kubernetes](/docs/operate/kubernetes).
+
+## Reporting problems
+
+Open an issue at [github.com/bitop-dev/open-mcp-portal/issues](https://github.com/bitop-dev/open-mcp-portal/issues) (there is a form for each kind) or ask in [Discussions](https://github.com/bitop-dev/open-mcp-portal/discussions). Report security problems privately, as [`SECURITY.md`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.14.0/SECURITY.md) describes.

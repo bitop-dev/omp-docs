@@ -3,10 +3,15 @@ title: Releases
 description: "Open MCP Portal's releases, which versions are supported, what to expect before 1.0, and how releases are published."
 ---
 
-These docs describe **v0.13.1**, released on 2026-11-01 ([GitHub release](https://github.com/ncecere/open-mcp-portal/releases/tag/v0.13.1)). The full history is in the repository's [changelog](https://github.com/ncecere/open-mcp-portal/blob/v0.13.1/CHANGELOG.md) and [releases](https://github.com/ncecere/open-mcp-portal/releases). What comes next is on the [roadmap](/docs/releases/roadmap).
+These docs describe **v0.15.3**, released on 2026-11-21 ([GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.3)). The full history is in the repository's [changelog](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/CHANGELOG.md) and [releases](https://github.com/bitop-dev/open-mcp-portal/releases). What comes next is on the [roadmap](/docs/releases/roadmap).
 
 | Release | Date | In short |
 |---|---|---|
+| [v0.15.3](/docs/releases/v0-15-3) | 2026-11-21 | Built with Go 1.26.11 (GO-2026-6859); `DATABASE_MAX_CONNS`; provider credential fixes; retention purges that don't read the whole call log; held audit rows sent once. Migrations `00066` and `00067`. |
+| [v0.15.2](/docs/releases/v0-15-2) | 2026-11-10 | A hardening pass with no behaviour change: fewer database round trips per gateway request, a compressed web app, faster admin queries. Migration `00065` (indexes only). |
+| [v0.15.1](/docs/releases/v0-15-1) | 2026-11-06 | Signed audit checkpoints and audit webhook sinks with Admin › Audit stream, both off until enabled. Migrations `00063` and `00064`. |
+| v0.15.0 | 2026-11-06 | **Tagged, never published:** its image failed the vulnerability scan. v0.15.1 replaces it. |
+| [v0.14.0](/docs/releases/v0-14-0) | 2026-11-05 | Definition scanning in shadow mode, the first slice of audit streaming (off by default) and an audit retention floor. Migrations `00058` to `00062`. |
 | [v0.13.1](/docs/releases/v0-13-1) | 2026-11-01 | Rebuilt on a refreshed Go builder image, with a regression test for OIDC group changes. No migrations. |
 | [v0.13.0](/docs/releases/v0-13-0) | 2026-11-01 | Catalog search by approved tools, resources and prompts; list columns that follow window resizing. No migrations. |
 | [v0.12.0](/docs/releases/v0-12-0) | 2026-11-01 | SCIM 2.0 provisioning: people and group-to-team-role mappings from your identity provider. Migrations `00051` to `00056`. |
@@ -31,30 +36,31 @@ These docs describe **v0.13.1**, released on 2026-11-01 ([GitHub release](https:
 
 ## Supported versions
 
-Before 1.0, only the **latest minor release** is supported: fixes, security or otherwise, are made on `main` and released as a patch of that minor. Older minors get no fixes, so upgrade to the latest. Today that is **v0.13.1**. See [`SECURITY.md`](https://github.com/ncecere/open-mcp-portal/blob/v0.13.1/SECURITY.md) and [`CONTRIBUTING.md`](https://github.com/ncecere/open-mcp-portal/blob/v0.13.1/CONTRIBUTING.md).
+Before 1.0, only the **latest minor release** is supported: fixes, security or otherwise, are made on `main` and released as a patch of that minor. Older minors get no fixes, so upgrade to the latest. Today that is **v0.15.3**. See [`SECURITY.md`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/SECURITY.md) and [`CONTRIBUTING.md`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/CONTRIBUTING.md).
 
 ## Before 1.0
 
 - **It is development software.** It has been tested with unit and integration tests against a real PostgreSQL, fake MCP servers and a fake OAuth provider, on Kubernetes release gates, and with real clients and a real upstream server (see each release's notes). It hasn't run in production yet; a pilot is your environment's test.
 - **Upgrades only go forward.** Migrations can't be undone by changing images; going back past a migration means restoring a backup, and an older image doesn't enforce what a newer one added. Read every release's notes between your version and the target. See [Migrations and upgrades](/docs/operate/migrations-and-upgrades).
 - **A minor release may break things.** v0.4.0 did: it retired external agent-platform trust. Each release's notes say how to adapt.
+- **A tag isn't always a release.** Tags are never moved or reused: when a tag's publication fails (v0.15.0's image failed the vulnerability scan), the fix ships as the next patch version and the tag stays, unpublished.
 - **The management API may change** in any minor release before 1.0. The MCP endpoint follows the MCP specification, and the headers MCP servers receive (`MCP-Gateway-Identity`, `MCP-Gateway-Provider`, `MCP-Gateway-Provider-Token`) won't change. Since v0.4.0, a client that **sends** `MCP-Gateway-Identity` to `/mcp/{slug}` is refused with `403`.
 - **Version 1.0.0 is not decided.** Releases continue as v0.x until the maintainer decides otherwise.
 
 ## How releases are published
 
-Each release is a Git tag, `vX.Y.Z`, with an entry in the repository's `CHANGELOG.md`, notes in `docs/releases/` and a GitHub release. The project follows Semantic Versioning. Releasing a tag publishes the container image `ghcr.io/ncecere/open-mcp-portal:vX.Y.Z` for amd64 and arm64, signed with cosign keyless signing by the repository's `image.yml` workflow, with its SBOM and build provenance attached as attestations. The GitHub release attaches:
+Each release is a Git tag, `vX.Y.Z`, with an entry in the repository's `CHANGELOG.md`, notes in `docs/releases/` and a GitHub release. The project follows Semantic Versioning. Releasing a tag publishes the container image `ghcr.io/bitop-dev/open-mcp-portal:vX.Y.Z` for amd64 and arm64, signed with cosign keyless signing by the repository's `image.yml` workflow, with its SBOM and build provenance attached as attestations. The GitHub release attaches:
 
 - `open-mcp-portal-vX.Y.Z.digest.txt`: the image digest to pin;
 - SPDX SBOMs for the image and each platform;
 - since v0.10.0, the `omp` command line for Linux, macOS and Windows on amd64 and arm64, each with a cosign bundle (`.sigstore.json`);
 - `checksums.txt` for the files.
 
-Check the image's signature with cosign v3.0 or newer before you deploy, and deploy by digest:
+Check the image's signature with cosign v3.0 or newer before you deploy, and deploy by digest. The certificate identity names the repository that published the tag: `bitop-dev/open-mcp-portal` from v0.15.3 on, `ncecere/open-mcp-portal` (the repository's old address) up to v0.15.2. The image uses `ghcr.io/bitop-dev/open-mcp-portal` from v0.15.3 onward. Earlier releases use `ghcr.io/ncecere/open-mcp-portal`.
 
 ```sh
-cosign verify ghcr.io/ncecere/open-mcp-portal@sha256:<digest> \
-  --certificate-identity https://github.com/ncecere/open-mcp-portal/.github/workflows/image.yml@refs/tags/vX.Y.Z \
+cosign verify ghcr.io/bitop-dev/open-mcp-portal@sha256:<digest> \
+  --certificate-identity https://github.com/bitop-dev/open-mcp-portal/.github/workflows/image.yml@refs/tags/vX.Y.Z \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
@@ -63,7 +69,7 @@ Check an `omp` binary the same way, with `cosign verify-blob` and its bundle, th
 ```sh
 cosign verify-blob omp-vX.Y.Z-linux-amd64 \
   --bundle omp-vX.Y.Z-linux-amd64.sigstore.json \
-  --certificate-identity https://github.com/ncecere/open-mcp-portal/.github/workflows/image.yml@refs/tags/vX.Y.Z \
+  --certificate-identity https://github.com/bitop-dev/open-mcp-portal/.github/workflows/image.yml@refs/tags/vX.Y.Z \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 sha256sum --ignore-missing -c checksums.txt
 ```

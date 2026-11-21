@@ -3,7 +3,7 @@ title: v0.4.0
 description: "Open MCP Portal v0.4.0 (2026-10-28): tool scopes on credentials, per-gateway tool curation, shared service connections and separate database roles. Breaking: external agent-platform trust is retired. Migrations 00029 to 00034."
 ---
 
-**Released 2026-10-28.** [GitHub release](https://github.com/ncecere/open-mcp-portal/releases/tag/v0.4.0) · image `ghcr.io/ncecere/open-mcp-portal:v0.4.0` · migrations `00029` to `00034` (`00029` to `00033` expand-only; `00034` is forward-only).
+**Released 2026-10-28.** [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.4.0) · image `ghcr.io/ncecere/open-mcp-portal:v0.4.0` · migrations `00029` to `00034` (`00029` to `00033` expand-only; `00034` is forward-only).
 
 The first release of the v0.4 line, after [v0.3.3](/docs/releases/v0-3-3): credentials that reach only some tools, tools a gateway can rename and pin, team-owned connections for service accounts, and a database login that can't rewrite history. **This release is breaking:** it retires the external agent-platform trust that [v0.3.0](/docs/releases/v0-3-0) added, and on Kubernetes the migration step now reads its own Secret. Read [Upgrading](#upgrading) before you pull the image.
 
@@ -37,7 +37,7 @@ The first release of the v0.4 line, after [v0.3.3](/docs/releases/v0-3-3): crede
 
 ## Verification
 
-The release was tested in both database-role modes and its published image signed and verified; the [GitHub release](https://github.com/ncecere/open-mcp-portal/releases/tag/v0.4.0) and the [release notes](https://github.com/ncecere/open-mcp-portal/blob/v0.4.0/docs/releases/v0.4.0.md) record how.
+The release was tested in both database-role modes and its published image signed and verified; the [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.4.0) and the [release notes](https://github.com/bitop-dev/open-mcp-portal/blob/v0.4.0/docs/releases/v0.4.0.md) record how.
 
 ## Known limitations
 
@@ -71,4 +71,4 @@ See [Install with Docker Compose](/docs/operate/compose) and [Install on Kuberne
 
 ## Reporting problems
 
-Open an issue at [github.com/ncecere/open-mcp-portal/issues](https://github.com/ncecere/open-mcp-portal/issues) (there is a form for each kind) or ask in [Discussions](https://github.com/ncecere/open-mcp-portal/discussions). Report security problems privately, as [`SECURITY.md`](https://github.com/ncecere/open-mcp-portal/blob/v0.4.0/SECURITY.md) describes.
+Open an issue at [github.com/bitop-dev/open-mcp-portal/issues](https://github.com/bitop-dev/open-mcp-portal/issues) (there is a form for each kind) or ask in [Discussions](https://github.com/bitop-dev/open-mcp-portal/discussions). Report security problems privately, as [`SECURITY.md`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.4.0/SECURITY.md) describes.

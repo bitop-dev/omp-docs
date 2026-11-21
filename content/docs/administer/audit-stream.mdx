@@ -1,0 +1,109 @@
+---
+title: Audit stream
+description: "Admin › Audit stream in Open MCP Portal: the sealed audit stream's state and checkpoints, webhook sinks that push it to a SIEM, pull consumers, retention holds and held oversized rows."
+---
+
+Open MCP Portal can copy its [audit log](/docs/administer/audit-log) off the host as a **sealed, hash-chained stream**, so a receiver outside the portal (usually your SIEM) can notice a missing or altered entry. **Admin › Audit stream** (`/admin/audit-stream`, under Operations) is where platform admins watch the stream and manage where it goes. Auditors see the page read-only. It needs a browser session.
+
+The stream itself is switched on by the operator, not on this page: sealing with `AUDIT_STREAM_ENABLED`, signed checkpoints and webhook delivery with one-time commands after the rollout. Until they are on, the page says so in warnings at the top. See [Audit stream for operators](/docs/operate/audit-stream).
+
+<Screenshot slot="admin-audit-stream" />
+
+<Callout title="Tamper-evident, not tamper-proof">
+A receiver that pinned the stream's id and checkpoint key can tell whether what it holds is what the portal sealed and signed. Someone who controls the running portal holds that key too, so the protection is the copies your receivers already stored: preserve and verify evidence at the receiver.
+</Callout>
+
+## Stream status
+
+The **Stream status** card shows:
+
+- **Stream id**, **Epoch**, **Last sequence** and **Earliest available sequence** (older entries were deleted by retention). The epoch changes after a database failover or restore.
+- **Sealer (this replica)**: whether the replica that answered seals (`AUDIT_STREAM_ENABLED`). Replicas can be configured differently; set it on all of them.
+- **Stream state**: `running`, or a halt the operator must clear (for example after a database restore).
+- **Checkpoints**: enabled or disabled, the **Last checkpoint sequence**, the **Checkpoint age**, the **Active key id** and the **Active key fingerprint** (SHA-256 of the public key). **Public checkpoint keys** opens `/.well-known/omp-audit-keys.json`.
+- **Sinks gate** and **Minimum sink reader version**: whether webhook delivery is enabled for the install.
+
+Compare a receiver's pinned key with the fingerprint shown here, over a channel you trust. Publication alone doesn't make a key trustworthy.
+
+## Sinks
+
+A **sink** is a receiver the portal pushes the stream to: an `https` URL that accepts signed NDJSON batches. **Create sink** asks for:
+
+| Field | Means |
+|---|---|
+| **Name** | Up to 100 characters |
+| **URL** | The receiver's address, `https` (plain `http` only for an internal host the operator allowed). The URL is write-only: afterwards only its host is shown. On edit, leave it empty to keep the current one |
+| **Profile** | **Summary** (the time, the action, the actor's kind and id, the team, the target's type and id, and the request id; ids are still personal data) or **Full** (the complete entries with their before-and-after values, which can contain email addresses and other personal information). Recorded call contents are never in the stream |
+| **Required** | A required sink **holds audit retention** at its position, even while disabled: entries it hasn't received are not deleted. An optional one doesn't, and can fall behind what retention kept |
+| **Enabled** | Whether the portal delivers to it |
+| **Batch size** | Records per request, 1 to 1,000 (100 by default) |
+
+Saving a new sink shows its **signing secret once**: copy it into the receiver now. The receiver checks each request's `X-OMP-Signature` with it, as for [notification webhooks](/docs/administer/notifications#the-signed-json-format). The destination's host is checked when you save and again at every connection; an internal address is refused unless the operator allowed it with `AUDIT_STREAM_ALLOWED_NETWORKS`.
+
+The sinks table shows each sink's profile, whether it's required, its host, its state, its **Lag (records)**, **Last success**, **Last error class** and **Consecutive failures**, its **Retention effect** ("Holding — retention waits for this cursor", "Holding while disabled" or "Not holding") and any **Held oversized sequence**. Platform admins have these actions:
+
+- **Edit**: change any field. Edits use the sink's revision: if someone else saved first, review the latest before saving again.
+- **Test**: sends a signed `audit.test` with no audit records and says whether the receiver accepted it. It never moves the sink's position.
+- **Rotate secret**: shows a new secret once. The previous one stays valid for 24 hours, and requests carry both signatures meanwhile.
+- **Resume**: for an optional sink that fell behind retention (`range_expired`). It sends the receiver a signed notice of the exact missing range, then continues after the receiver accepts it. Resuming here doesn't make the receiver trust the gap: keep the earlier evidence and approve the discontinuity at the receiver.
+- **Acknowledge oversized**: see [below](#held-oversized-rows).
+- **Delete**: stops delivery and releases the sink's retention hold. It can't be undone.
+
+Making a sink optional or deleting it releases its hold; both are audited (`settings.audit_sink_change`).
+
+<Callout type="warn" title="A required sink that can't deliver grows the database">
+While a required sink is failing, or disabled, the audit log isn't purged past it. Watch its lag and the database's size, and fix or remove the sink rather than letting it sit.
+</Callout>
+
+### Failure notices
+
+At the third failed delivery in a row, platform admins get **Audit sink delivery is failing** (`audit.sink_failing`) in their inbox and by email, and **Audit sink delivery recovered** (`audit.sink_recovered`) after the next success. Both link here. A failing send backs off from 1 second up to 5 minutes and keeps retrying. Your receiver should also alert when nothing arrives for a while: a portal that stops sending sends no notice.
+
+## Held oversized rows
+
+A full audit entry larger than the stream's 16 MiB line limit can't be sent whole. In its place the stream carries an **oversized envelope**: the entry's hash, its size and a reference to fetch it.
+
+- An **optional** sink delivers the envelope and carries on.
+- A **required, Full** sink stops just before that entry and **holds** there, so retention can't delete the entry before someone has saved it. The table shows the **Held oversized sequence**.
+
+Since v0.15.3 the held envelope is **sent to the receiver once**, and the cell says what happened:
+
+- "Not yet sent to the receiver."
+- "Sent to the receiver *(time)*. Not resent while held."
+- "Sending failed *(time)* (*class*). Retrying with backoff."
+
+Editing the sink (enabling or disabling it, or changing its URL, secret, profile or Required) sends the envelope once more, to the new settings.
+
+<Screenshot slot="audit-stream-held-row" />
+
+To release the hold:
+
+<Steps>
+<Step>
+
+### Save the full entry
+
+Fetch it in chunks from `GET /v1/admin/audit/entries/{seq}/full` (as a platform admin, an auditor, or a collector's `platform:read` token), check it against the envelope's hash, and store it with your audit evidence.
+
+</Step>
+<Step>
+
+### Acknowledge it
+
+**Acknowledge oversized** on the sink. The sink then moves past exactly that one entry. Someone else fetching the entry doesn't release your sink. The acknowledgement is audited (`audit.sink_oversized_acknowledged`).
+
+</Step>
+</Steps>
+
+## Pull consumers
+
+Instead of, or as well as, sinks, a collector can **pull** the stream with a platform automation token (`platform:read`). The **Pull consumers** card lists the registered collectors with their profile, whether they're required, their **Acknowledged sequence** and **Lag (records)**. Platform admins **Register consumer** (a name, a profile, Required), **Make required** or **Make optional**, and **Remove**. Like a required sink, a required consumer holds retention until it acknowledges records; making it optional or removing it releases the hold. Changes are audited as `settings.audit_consumer_update`. At most 100 consumers can be registered. How a collector pulls is in [Audit stream for operators](/docs/operate/audit-stream#pulling-the-stream).
+
+## Who can do what
+
+| | Platform admin | Platform auditor | `platform:read` token |
+|---|---|---|---|
+| See this page | Yes | Read only | No |
+| Create, edit, test, rotate, resume, acknowledge or delete sinks | Yes | No | No |
+| Register or change pull consumers | Yes | No | No |
+| Pull the stream, verify it, fetch full entries, acknowledge as a consumer, read the stream status | Yes | Yes | Yes |

@@ -11,7 +11,7 @@ description: How long Open MCP Portal keeps call records, recorded call contents
 |---|---|---|---|
 | **Call records** | 90 days | 1 to 3,650 | Yes |
 | **Recorded call contents** | 14 days | 1 to 90 | Yes |
-| **Audit log** | 400 days | 30 to 3,650 | No |
+| **Audit log** | 400 days | 30 to 3,650, and never below [the audit floor](#the-audit-floor) | No |
 | **Usage rollups** | 400 days | 90 to 3,650 | No |
 
 - A call involving two teams (a gateway of one team, a server of another) is kept for the **shorter** of the two teams' periods; with neither, the platform's.
@@ -19,17 +19,28 @@ description: How long Open MCP Portal keeps call records, recorded call contents
 - Team overrides are set on the team's admin page (**Limits & retention**); teams see what applies under **Team settings › Limits & retention**.
 - Shortening a period asks for confirmation: the next run permanently deletes what's older.
 
+## The audit floor
+
+Since v0.14.0, audit entries are always kept at least as long as the **longest call-record period**, the platform's or any team's override (archived teams included), and never less than the operator's floor, `AUDIT_MIN_RETENTION_DAYS` (30 days unless the operator set more; [Configuration](/docs/operate/configuration#audit-stream)). The database enforces it, so it holds whatever the settings say. To keep the settings honest, saving is refused (`invalid_period`, reason `audit_interlock`) when:
+
+- the audit log's period would be below the floor or below a call-record period;
+- a call-record period, platform-wide or a team's, would be longer than the audit log's period.
+
+If an install already had a call-record override longer than the audit period when it upgraded, the next retention change is refused until you raise the audit period or lower that override.
+
+**With the audit stream on.** Once the [audit stream](/docs/administer/audit-stream) has sealed anything, or a pull consumer or sink exists, audit entries are deleted only after they are sealed and every *required* consumer and sink has received them. A required receiver that is failing or disabled therefore keeps the audit log growing until it catches up, is made optional or is removed.
+
 ## The retention job
 
 One replica at a time runs the job every `RETENTION_INTERVAL` (15 minutes by default). It deletes each kind in batches of `RETENTION_BATCH_SIZE` rows (1,000 by default), at most 100 batches per kind per run: recorded contents, then call records, then audit entries, then usage rollups. Call records are never deleted before the usage rollup has counted them. It also clears expired consent links, old rate-limit windows and expired [MCP task](/docs/server-authors/tasks) handles. It's idempotent, and a kind that fails doesn't stop the others.
 
-Audit entries and call records are deleted through database functions that never delete audit entries younger than 30 days or call records younger than 1 day. When the operator runs the portal with [split database roles](/docs/operate/database-roles), these functions are the only way the serving login can delete them. If you roll back to a binary older than v0.4.0 while the restricted login is in place, its retention runs fail.
+Audit entries and call records are deleted through database functions that never delete audit entries younger than the audit floor or call records younger than 1 day. When the operator runs the portal with [split database roles](/docs/operate/database-roles), these functions are the only way the serving login can delete them. If you roll back to a binary older than v0.4.0 while the restricted login is in place, its retention runs fail.
 
 The job's log may occasionally show `retention: clean-up failed — Approval is unavailable`: a clean-up step found the access tables locked by another change and gave up rather than wait. The next run recovers.
 
 **Last run** shows when the job last ran, what it deleted per kind ("Nothing deleted" when nothing was due) and any kind that failed. Each run that deleted something writes a `retention.purge` audit entry with counts only.
 
-There are no legal holds or dry runs. Changes are audited as `settings.retention_update` and `team.retention_update`.
+There are no legal holds or dry runs. If retention settings stored in the database are malformed, the job deletes nothing rather than falling back to defaults. Changes are audited as `settings.retention_update` and `team.retention_update`.
 
 ## Fixed periods
 

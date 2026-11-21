@@ -10,6 +10,8 @@ Open MCP Portal serves four HTTP surfaces from one origin, its `APP_URL`:
 - **The management API** under `/v1`, plus `/auth/*` and the health checks: everything the web app does. It's described by an OpenAPI 3.0 document that covers every route (a test in the product repository enforces it). See the [reference](/docs/api/reference/operations/getHealthz), generated from that document.
 - **The SCIM endpoint**, `/scim/v2` (since v0.12.0): SCIM 2.0 for one identity provider, with a provisioning token. It isn't in the OpenAPI document. See [The SCIM endpoint](#the-scim-endpoint).
 
+One more public document sits beside them: `GET /.well-known/omp-audit-keys.json` (since v0.15.1), the public keys that sign audit checkpoints, served without authentication. It isn't in the OpenAPI document either. See [Audit stream for operators](/docs/operate/audit-stream#signed-checkpoints).
+
 <Cards>
   <Card title="The MCP endpoint" href="/docs/api/mcp-endpoint">Methods, protocol versions, names, error codes and limits.</Card>
   <Card title="OAuth endpoints" href="/docs/api/oauth-endpoints">Discovery metadata, authorize, token, register, revoke and the JWKS.</Card>
@@ -36,11 +38,23 @@ Conventions:
 
 The tags group the routes: sign-in, me, teams, MCP servers, catalog, gateways and calls, API keys, OAuth consent and connected apps, service accounts, auth providers, connections, limits, retention, usage, notifications, automation tokens, approvals, provisioning (SCIM) and admin.
 
-## Changes since v0.3.2
+## Changes since v0.13.1
+
+All of these are under the **admin** tag in the reference, including the two team operations for scan findings. Every one is **browser session only**, except the audit stream reads marked below, which also accept a platform automation token with `platform:read`.
+
+- **v0.15.3: held oversized rows.** In [`GET /v1/admin/audit/stream/status`](/docs/api/reference/admin/adminAuditStreamStatus), a sink held at an oversized row has `held_notice` next to `held_oversized_seq`: `null` until the portal has tried to send that row's envelope, then `delivered_at`, or `failed_at` with `failure_class`. A replica of v0.15.2 or earlier leaves the field out. No new operation.
+- **v0.15.1: audit sinks and checkpoints.** [`/v1/admin/settings/audit-sinks`](/docs/api/reference/admin/adminAuditSinks) to list, create, read, update and delete webhook sinks, with the actions [`rotate-secret`](/docs/api/reference/admin/adminAuditRotateSinkSecret), [`test`](/docs/api/reference/admin/adminAuditTestSink), [`resume`](/docs/api/reference/admin/adminAuditResumeSink) and [`oversized/{seq}/acknowledge`](/docs/api/reference/admin/adminAuditAcknowledgeSinkOversized); every edit and action needs `If-Match` with the sink's `revision`. Platform admins manage sinks; auditors may read them. [`GET /v1/admin/audit/stream/status`](/docs/api/reference/admin/adminAuditStreamStatus) (**also `platform:read`**): the stream tip, checkpoint state and keys, sinks and pull consumers. `GET /v1/admin/audit/verify` now checks checkpoint signatures and key authority too. See [Audit stream](/docs/administer/audit-stream).
+- **v0.14.0: definition scanning.** [`GET`/`PUT /v1/admin/settings/scanning`](/docs/api/reference/admin/adminGetScanningSettings) (`definitionMode`: `off` or `shadow`), [`GET /v1/admin/scanning/rules`](/docs/api/reference/admin/adminListScanningRules) (the rule catalog), and the findings of one server's stored definitions with a rescan: [`GET …/mcp-servers/{serverId}/scan-findings`](/docs/api/reference/admin/teamListDefinitionFindings) and [`POST …/scan`](/docs/api/reference/admin/teamRescanDefinitions) for the team, with the [admin](/docs/api/reference/admin/adminListDefinitionFindings) equivalents. A token gets `403 token_not_allowed`. See [Definition scan findings](/docs/teams/definition-scanning).
+- **v0.14.0: audit stream (pull).** [`GET /v1/admin/audit/stream`](/docs/api/reference/admin/adminAuditStream) (NDJSON after `after_seq`, with `limit` and `profile`), [`GET …/stream/tip`](/docs/api/reference/admin/adminAuditStreamTip), [`GET /v1/admin/audit/verify`](/docs/api/reference/admin/adminAuditVerify), [`GET /v1/admin/audit/entries/{seq}/full`](/docs/api/reference/admin/adminAuditFull) and [`POST …/stream/ack`](/docs/api/reference/admin/adminAuditAck), all for platform admins and auditors and **also `platform:read`**; collectors are registered under [`/v1/admin/settings/audit-consumers`](/docs/api/reference/admin/adminAuditConsumers) (platform-admin browser session only). New error codes include `range_expired` (`410`) and `audit_row_missing`. See [Audit stream for operators](/docs/operate/audit-stream).
+- **v0.14.0: retention.** [`PUT /v1/admin/settings/retention`](/docs/api/reference/admin/adminUpdateRetentionSettings) and a team's override refuse an audit period below the audit floor or the longest call-record period, and a call-record period above the audit period (`422 invalid_period`, reason `audit_interlock`). See [Retention](/docs/administer/retention#the-audit-floor).
+- **v0.13.0: catalog search.** [`GET /v1/catalog/servers?q=`](/docs/api/reference/catalog/listCatalogServers) also matches the names, titles and descriptions of a server's approved, listed capabilities. Matching is literal (`%`, `_` and `\` as typed); results are servers only. Bad search text is `400 invalid_search`.
+
+v0.15.1 added the notification events `audit.sink_failing` and `audit.sink_recovered` for platform admins (the reference's `NotificationEventType` doesn't list them yet). Scripts that match on event names, error codes or audit actions should expect new values.
+
+## Changes from v0.3.2 to v0.13.0
 
 Every new operation below is **browser session only**: none accepts an automation token, and the set of token operations is the same as in v0.3.2.
 
-- **v0.13.0: catalog search.** [`GET /v1/catalog/servers?q=`](/docs/api/reference/catalog/listCatalogServers) also matches the names, titles and descriptions of a server's approved, listed capabilities. Matching is literal (`%`, `_` and `\` as typed); results are servers only. Bad search text is `400 invalid_search`.
 - **v0.12.0: provisioning and request fences.** The [provisioning operations](/docs/api/reference/provisioning/adminGetProvisioning) under `/v1/admin/provisioning` (the directory, provisioning tokens, provisioned users with adopt and unlink, groups and group-to-team mappings; [Provisioning](/docs/administer/provisioning)). `User` gains `manualStatus` and `directoryStanding`. New error codes include `request_authority_changed`, `issuer_changed`, `cleanup_pending` and `directory_not_found`.
 - **v0.10.0: governance and transfers.** Governance fields on servers (owner, on-call contact, sensitivity and its confirmation, lifecycle, sunset, replacement, next review) and `maxSensitivity` on gateways, all session only ([Server governance](/docs/teams/server-governance)). Transfers: [`POST …/mcp-servers/{serverId}/transfer`](/docs/api/reference/mcp-servers/requestTeamMcpServerTransfer), `GET /v1/teams/{team}/mcp-server-transfers` with cancel and accept, and the admin's [force transfer](/docs/api/reference/admin/adminForceTransferMcpServer). Re-review intervals: [`GET`/`PUT /v1/admin/settings/governance`](/docs/api/reference/admin/adminGetGovernanceSettings). New error codes include `governance_role`, `owner_required`, `transfer_pending`, `transfer_closed` and `changed_since_request`. A token that sends governance gets `403 token_not_allowed`.
 - **v0.9.0: tasks.** `McpServer.supportsTasks` (read-only). Call records use the methods `tasks/get`, `tasks/update` and `tasks/cancel`.
@@ -76,7 +90,7 @@ curl -H "Authorization: Bearer $OMP_TOKEN" https://mcp.example.com/v1/token
 - **Platform tokens** (`ompadm_`, scopes `platform:read` and `platform:write`) read the platform's state and provision teams, gateways, grants and limits. **Team publisher tokens** (`omppub_`, scopes `servers:read` and `servers:write`) work on one team's servers; on another team's path they get `404 team_not_found`.
 - [`GET /v1/token`](/docs/api/reference/automation-tokens/getToken) returns the calling token's kind, name, scopes, team and expiry, which helps when debugging a pipeline.
 - Tokens never work on `/mcp/{slug}`.
-- No operation added since v0.3.2 accepts a token. Governance, ceilings, curation, approvals, access requests, sessions, service connections, server protection limits, endpoints and provisioning are browser-session only.
+- Of the operations added since v0.3.2, only the audit stream reads accept a token (`platform:read`, since v0.14.0): the stream, its tip and status, verify, full entries and the collector acknowledgement, so an off-host collector can pull the audit stream. Governance, ceilings, curation, approvals, access requests, sessions, service connections, server protection limits, endpoints, provisioning, scanning, audit sinks and collector registration are browser-session only.
 
 See [Automation tokens](/docs/administer/automation-tokens) (platform) and [Publisher tokens](/docs/teams/publisher-tokens) (team) for creating and using them.
 
@@ -94,4 +108,4 @@ Setup, linking and the lifecycle are in [Provisioning](/docs/administer/provisio
 
 ## Keeping the reference current
 
-The reference is generated at build time from `openapi/open-mcp-portal.yaml` in this documentation's repository, a copy of `api/openapi.yaml` from the Open MCP Portal release these docs describe (v0.13.1). The product repository's copy is the source of truth.
+The reference is generated at build time from `openapi/open-mcp-portal.yaml` in this documentation's repository, a copy of `api/openapi.yaml` from the Open MCP Portal release these docs describe (v0.15.3). The product repository's copy is the source of truth.

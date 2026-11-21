@@ -1,0 +1,59 @@
+---
+title: Definition scan findings
+description: "What Open MCP Portal's definition scanning looks for in a server's tools, prompts and resources, how to read a finding on the Capabilities tab and in review dialogs, and why it blocks nothing."
+---
+
+Since v0.14.0, Open MCP Portal checks every capability definition a server lists (each tool, prompt, resource and resource template) with local heuristics when it reads the server's capabilities. What the rules notice is shown to the people who review the definitions: the server's team, and platform admins and auditors. It's a second pair of eyes for the [untrusted text](/docs/teams/capabilities#reading-capabilities) a model will read.
+
+<Callout type="warn" title="Shadow mode: findings inform review, they decide nothing">
+Scanning runs in **shadow mode**. A finding never blocks a refresh, a publish request, an approval or a call, and the portal never redacts, rewrites or approves anything because of it. **A scan that found nothing doesn't mean the definition is safe**: it means these heuristics found nothing. Read the definition either way.
+</Callout>
+
+<Screenshot slot="capability-scan-findings" />
+
+## Where you see findings
+
+- **The Capabilities tab** of a server has a **Definition scan findings** section, with one entry per capability.
+- **Publishing.** The **Publish** and **Request review** dialogs show the server's findings, so the team sees them before a reviewer does. See [Publishing and review](/docs/teams/publishing).
+- **Review.** A platform admin's **Approve…** dialog shows them, and so does **Approve change** for a changed capability, for that capability only. See [Catalog review](/docs/administer/catalog-review).
+
+Findings need a browser session: automation tokens, and so the `omp` command line, can't read them.
+
+## Reading a finding
+
+Each capability shows the **ruleset** it was scanned with (`v1` today) and when it was scanned. Each finding has:
+
+| Field | Means |
+|---|---|
+| Rule | What matched, as a rule id such as `poison.override_instructions` or `unicode.bidi_override` |
+| Group | **secret**, **unicode**, **poison** or **length** (below) |
+| Severity | **info**, **low**, **medium** or **high**: how suspicious the pattern usually is. Context can raise it: a sensitive path next to "read" or "send" is high |
+| Count | How many times the rule matched in that place |
+| Location | Where in the definition it matched, as a JSON pointer such as `/description` or `/inputSchema/properties/query/description` |
+
+The matched text itself is never stored or shown: look at that place in the definition.
+
+The rule groups:
+
+- **secret**: something shaped like a credential (an API key, a private key, a bearer token), from the same rules that [redact recorded calls](/docs/administer/payload-capture). A definition has no reason to carry one.
+- **unicode**: characters a reader doesn't see or misreads: invisible and tag characters, bidirectional overrides, control and private-use characters, variation selectors, and names that mix scripts or look like another name.
+- **poison**: English phrasing aimed at the model rather than at you, such as "ignore previous instructions", text that tells the model to hide something from the user, preconditions like "always call … first", references to other tools, pseudo-tags such as `<important>`, sensitive paths such as `~/.ssh`, links to hosts other than the server's own, and long encoded blobs.
+- **length**: a description over 2,000 characters, or a schema text over 1,000.
+
+Many findings are harmless: a tool that really works with files may mention a path, and an `info` finding is a prompt to look, not a sign of an attack. What matters is whether the text tries to steer the model beyond what the tool does.
+
+## When there is no current result
+
+A capability never looks clean when it wasn't scanned. Instead it says:
+
+- **Scan incomplete**, with a reason: the definition is over 64 KiB (`size`), took longer than the scan's time budget (`budget`), isn't valid JSON (`invalid_json`) or is nested too deep (`depth`). Findings may be missing.
+- **Not yet scanned under the current definition/ruleset**: the definition changed, or the ruleset did, and the background scan hasn't reached it yet.
+- **Scanning disabled**: a platform admin turned scanning **Off** ([Definition scanning](/docs/administer/definition-scanning)). Older findings aren't shown as current.
+
+## Rescanning
+
+**Rescan definitions** scans the stored definitions again now, without contacting the server. The team's **editors and above** can rescan their own server; platform admins can rescan any server from its admin page. Every refresh of the server's capabilities scans them anyway, and after an upgrade a background pass scans what the portal already had.
+
+## What scanning doesn't catch
+
+The rules are public, English-only and lexical, so a definition written to get past them will. Paraphrase, other languages, encodings, a payload split across several fields, or an instruction written as ordinary prose all pass. Scanning doesn't see what a server does (only what its definitions say), doesn't look at call arguments or results, and doesn't judge tool annotations. It complements, and never replaces, your [tool classes](/docs/teams/capabilities#classifying-tools), [tool scopes](/docs/use/tool-scopes), [curation](/docs/teams/curating-gateway-tools), [approval rules](/docs/teams/approval-rules) and a person reading the definition. The repository's design lists [what it will not catch](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/docs/content-scanning.md#9-what-this-will-not-catch) in full.

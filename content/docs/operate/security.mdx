@@ -130,7 +130,7 @@ Since v0.3.2 a server can be reached with a **key each person pastes**, with the
 | **A secret leaks together with the others** (UM-5) | Every kind joins the call's redaction and the key rotation | A team's static credential echoed back by its own server reaches the caller in the tool result (it is redacted from logs, error messages and recorded payloads) |
 | **A token endpoint or sign-in metadata behind a private CA is trusted with the server's CA** (UM-6) | The TLS settings are for the MCP server's URL only: the token request and discovery use the system roots and no client certificate | A server in OAuth mode, or one using the portal's OAuth client, whose authorization server uses a private CA isn't supported |
 
-The IDs are the rows of the repository's [threat model](https://github.com/ncecere/open-mcp-portal/blob/v0.13.1/docs/threat-model.md) (sections 6.10 to 6.12 and UP-8), with the tests that cover each.
+The IDs are the rows of the repository's [threat model](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/docs/threat-model.md) (sections 6.10 to 6.12 and UP-8), with the tests that cover each.
 
 **Hardening when you use them:**
 
@@ -153,7 +153,7 @@ Tracing is off unless an OTLP endpoint is configured ([Tracing](/docs/operate/tr
 
 ## Records
 
-The audit log and call records are append-only (database triggers refuse changes; only the retention job deletes, past their periods). With [separate database logins](/docs/operate/database-roles), the runtime login can't update or delete them at all, and retention deletes them only through owner functions that keep at least 30 days of audit and 1 day of call records. That protects recent history against a leaked runtime credential; it doesn't make history tamper-proof against the owner. Every change is audited in the same transaction. Recording of call contents is off by default, redacted, truncated, encrypted, readable only by the recording team's owners and admins and by platform staff, and every view is audited.
+The audit log and call records are append-only (database triggers refuse changes; only the retention job deletes, past their periods). With [separate database logins](/docs/operate/database-roles), the runtime login can't update or delete them at all, and retention deletes them only through owner functions that keep at least 1 day of call records and audit entries for at least the audit floor (30 days or more, and never less than the longest call-record period). That protects recent history against a leaked runtime credential; it doesn't make history tamper-proof against the owner. For that, turn on the [audit stream](/docs/operate/audit-stream): receivers that pinned its stream id and checkpoint key detect a rewrite of what they already hold. Every change is audited in the same transaction. Recording of call contents is off by default, redacted, truncated, encrypted, readable only by the recording team's owners and admins and by platform staff, and every view is audited.
 
 ## Deployment
 
@@ -165,9 +165,9 @@ The audit log and call records are append-only (database triggers refuse changes
 
 ## Hardening status
 
-The repository's [threat model](https://github.com/ncecere/open-mcp-portal/blob/v0.13.1/docs/threat-model.md#9-hardening-ideas-not-findings) keeps a list of hardening ideas, numbered H-1 onward, which are suggestions rather than known vulnerabilities, and a table of where each stands (reviewed 2026-10-18, for v0.2.1, and updated since). v0.2.2 closed most of them, v0.3.0 finished one more detail (H-7's old cookie name), and v0.3.1 closed H-5 except the items in its row below. v0.3.3 closed H-12 and v0.4.0 built H-11. The agent-platform residual M-1 was withdrawn with the feature in v0.4.0 ([Retired: agent platforms](#retired-agent-platforms)).
+The repository's [threat model](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/docs/threat-model.md#9-hardening-ideas-not-findings) keeps a list of hardening ideas, numbered H-1 onward, which are suggestions rather than known vulnerabilities, and a table of where each stands (reviewed 2026-10-18, for v0.2.1, and updated since). v0.2.2 closed most of them, v0.3.0 finished one more detail (H-7's old cookie name), and v0.3.1 closed H-5 except the items in its row below. v0.3.3 closed H-12, v0.4.0 built H-11, and v0.14.0 and v0.15.1 built H-10. The agent-platform residual M-1 was withdrawn with the feature in v0.4.0 ([Retired: agent platforms](#retired-agent-platforms)).
 
-| Idea | Status in v0.13.1 | What remains |
+| Idea | Status in v0.15.3 | What remains |
 |---|---|---|
 | **H-1**, trusted clients and loopback redirects | **Partly done** (decision 62) | A trusted client's first sign-in to a gateway with a loopback redirect asks once ([Trusted clients](/docs/administer/trusted-clients#the-first-sign-in-from-this-computer)). After that first confirmation a local process can still use the trusted client's ID silently, and a process that drives the person's browser can press Continue. What limits it: the person must be signed in in their browser, the code is PKCE-bound and the token is bound to one gateway |
 | **H-2**, `sendIdentity` default | **Mostly addressed** (decision 64) | The default is off for a server with no authentication on a public host, on for internal hosts and other modes; an explicit value is kept and existing servers are unchanged ([Send identity token](/docs/teams/register-a-server#send-identity-token)). A manual Test sends the token and diagnoses a `401` or `403`. A server that accepts the request and refuses only when a tool runs (DeepWiki's public endpoint) still passes Test; each call's record shows whether the token was sent. Servers registered before v0.2.2 keep their value |
@@ -178,7 +178,7 @@ The repository's [threat model](https://github.com/ncecere/open-mcp-portal/blob/
 | **H-7**, proxy and cookie checks | **Done, with residuals** | `ENCRYPTION_KEY` and `API_KEY_PEPPER` must differ; the sign-in state cookie is `__Host-` prefixed on https; a once-a-minute warning and a `doctor` line when `TRUSTED_PROXIES` is empty behind a proxy ([Behind a proxy](/docs/operate/configuration#behind-a-proxy-trusted_proxies)). The old cookie name was accepted in v0.2.2 and is no longer read since v0.3.0; there is no warning for a `TRUSTED_PROXIES` that is set but wrong |
 | **H-8**, refresh token lifetime | **Done** (decision 63) | `OAUTH_REFRESH_ABSOLUTE_TTL` (180 days, `0` for none) from the last sign-in; a repeat inside the 30-second grace gets the same pair. A leaver's grants last up to the lifetime unless someone disconnects them or suspends the person |
 | **H-9**, image and scan hardening | **Done, with a residual** | `govulncheck` and `npm audit` block CI; Trivy fails the release on fixable high and critical findings; the Dockerfile's base images are pinned by digest. Digests are current only as far as Dependabot's weekly pull request is merged |
-| **H-10**, off-host audit export | **Open** | Needs a destination. The audit log is append-only and exportable as CSV |
+| **H-10**, off-host audit export | **Done, opt-in** (v0.14.0, v0.15.1) | A sealed, hash-chained [audit stream](/docs/operate/audit-stream) that a collector pulls or the portal pushes to webhook sinks, signed Ed25519 checkpoints with key handover, and an audit retention floor an admin can't lower below the call records'. It needs an off-host receiver that pins the stream and key and keeps its evidence. Someone who controls the running portal holds the signing key and can invent entries or stop sending; earlier off-host checkpoints bound how far back they can rewrite. Syslog and OTLP sinks and bulk exports aren't built |
 | **H-11**, split database roles | **Done, opt-in** (v0.4.0) | Separate migration and runtime logins, least-privilege grants reconciled by `migrate`, owner-only purge functions with fixed age floors, and a `doctor` check ([Database roles](/docs/operate/database-roles)). The default single-login setup only warns. The floors don't make runtime-writable settings or usage rollups trustworthy |
 | **H-12**, idle timeout and session list | **Done** (v0.3.3, decision 76) | `SESSION_IDLE_TIMEOUT` (off by default, 5 minutes up to `SESSION_TTL`); people list and end their sessions, and platform admins end a person's. Activity is recorded at most once a minute. Connected apps and keys are separate |
 
@@ -192,4 +192,4 @@ v0.2.2 added an end-to-end test that a provider token a server echoes back is re
 
 ## Reporting a vulnerability
 
-Report vulnerabilities privately through the repository's [security advisories](https://github.com/ncecere/open-mcp-portal/security/advisories/new), as its `SECURITY.md` describes. Don't open a public issue.
+Report vulnerabilities privately through the repository's [security advisories](https://github.com/bitop-dev/open-mcp-portal/security/advisories/new), as its `SECURITY.md` describes. Don't open a public issue.

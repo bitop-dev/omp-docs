@@ -1,6 +1,6 @@
 ---
 title: Notifications
-description: "Open MCP Portal's notifications: the in-portal inbox, email through your SMTP server, and signed or Slack-compatible webhooks; the 15 events, who gets them, delivery and retries, and platform webhooks."
+description: "Open MCP Portal's notifications: the in-portal inbox, email through your SMTP server, and signed or Slack-compatible webhooks; the 17 events, who gets them, delivery and retries, and platform webhooks."
 ---
 
 Open MCP Portal tells the right people when something needs them: a server is down or changed, a review is waiting or decided, a sign-in lapsed, a key is about to expire. There are three channels:
@@ -15,7 +15,7 @@ A notification never blocks or changes the thing it reports on. Everything about
 
 ## The events
 
-There are 15 events. Recipients are worked out when the event is delivered, from people's **current** roles: suspended people and archived teams get nothing, and the person who caused a manual event doesn't get notified of their own action.
+There are 17 events. Recipients are worked out when the event is delivered, from people's **current** roles: suspended people and archived teams get nothing, and the person who caused a manual event doesn't get notified of their own action.
 
 | Event | Fires when | Inbox and email to | Webhooks |
 |---|---|---|---|
@@ -34,6 +34,8 @@ There are 15 events. Recipients are worked out when the event is delivered, from
 | `server.review_due` | A published server's periodic [re-review](/docs/administer/governance#re-review-intervals) is overdue. Once per due date | The team's owners and admins, and the server's named owner | Never |
 | `server.sunset_soon` | A deprecated server stops being served within 14 days. Once per sunset date | The team's owners, admins and the server's named owner; and the owners and admins of each gateway that selects it (platform admins for a platform gateway) | Never |
 | `server.deprecated` | A server that a gateway selects is deprecated. Once per gateway | That gateway's team owners and admins (platform admins for a platform gateway) | Never |
+| `audit.sink_failing` | An [audit sink](/docs/administer/audit-stream#failure-notices) failed its third delivery in a row. Once per failure streak | Platform admins | Platform destinations that subscribe to it, which only the management API can set up: the web app's event list doesn't offer it yet |
+| `audit.sink_recovered` | A delivery succeeded after a streak that raised `audit.sink_failing` | Platform admins | As `audit.sink_failing` |
 
 Personal and private events never go to webhooks: `connection.needs_reconsent`, a personal key's `key.expiring`, and the seven events added since v0.5.0 (`approval.*`, `access.*` and the three `server.*` governance events). Approval and access notices carry only the request's ID and status (and, for approvals, the tool's name), never reasons, notes, arguments or previews. There is no event for creating a token; creation is in the [audit log](/docs/administer/audit-log). Delivery failures aren't an event either: they show in Admin › Notifications, on the destination, and on the [overview](/docs/administer/overview).
 

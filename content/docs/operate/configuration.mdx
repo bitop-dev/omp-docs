@@ -3,9 +3,9 @@ title: Configuration
 description: Every Open MCP Portal setting, its default and bounds, from environment variables, a YAML file or secret files.
 ---
 
-Open MCP Portal reads its settings when it starts. Everything else (publishing policy and server review intervals, internal networks, trusted clients, auth providers, limits, retention, redaction patterns, approval rules, gateway access requests, provisioning (SCIM), and each server's protection limits and endpoints) is set in the web app or the management API and stored in PostgreSQL. None of those has an environment variable.
+Open MCP Portal reads its settings when it starts. Everything else (publishing policy and server review intervals, internal networks, trusted clients, auth providers, limits, retention, redaction patterns, approval rules, gateway access requests, provisioning (SCIM), definition scanning, audit sinks and pull consumers, and each server's protection limits and endpoints) is set in the web app or the management API and stored in PostgreSQL. None of those has an environment variable.
 
-These are the settings of Open MCP Portal v0.13.1, in the image `ghcr.io/ncecere/open-mcp-portal:v0.13.1` ([verify its signature](/docs/operate/compose#the-image)).
+These are the settings of Open MCP Portal v0.15.3, in the image `ghcr.io/bitop-dev/open-mcp-portal:v0.15.3` ([verify its signature](/docs/operate/compose#the-image)).
 
 ## Where settings come from
 
@@ -26,6 +26,7 @@ An invalid value stops the process with a message naming the setting. `open-mcp-
 | `APP_URL` | none (required by `serve`) | The public origin people and MCP clients use, such as `https://mcp.example.com`: scheme and host (and port), no path. Used for cookies, sign-in redirects, `Origin` checks, the identity token's `iss`, gateway URLs and OAuth metadata. Must be https unless it's a loopback address |
 | `LISTEN_ADDR` | `:8088` | The HTTP listener |
 | `DATABASE_URL` (secret) | none (required by `serve`) | The runtime connection: `postgres://user:pass@host:5432/db?sslmode=require`; URL-encode the password. `serve`, `doctor` and `rotate-keys` use it. `migrate` uses it only when `DATABASE_MIGRATE_URL` is empty |
+| `DATABASE_MAX_CONNS` | `20` | Connections in each replica's serving pool, 4 to 1000; an invalid value stops startup. Unset, a `pool_max_conns` in `DATABASE_URL` is kept; set, this wins. A provider token refresh holds a connection for up to 10 seconds while the identity provider answers, so a slow provider can take several. Size PostgreSQL's `max_connections` (or your pooler) for replicas × this, including any rollout surge replicas, plus migration init containers and `doctor` ([Scaling](/docs/operate/scaling#the-database)). Added in v0.15.3; before, the pool was the driver's default, the larger of 4 and the number of CPUs |
 | `MIGRATE_ON_START` | `false` | Apply migrations when `serve` starts. For a single instance only; otherwise run `migrate` first |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn` or `error` |
 | `LOG_FORMAT` | `json` | `json` or `text`, on stdout |
@@ -76,7 +77,7 @@ Registration is open to anyone who can reach the portal, so the cap bounds how m
 
 | Setting | Default | Notes |
 |---|---|---|
-| `ENCRYPTION_KEY` (secret) | none (required by `serve`) | 32 random bytes, base64 (`openssl rand -base64 32`). Encrypts every part of an MCP server's static credential, the credentials of its additional endpoints, people's own keys for servers, the portal's OAuth client secrets and servers' TLS client keys, identity signing keys, auth provider client secrets, people's provider tokens and shared service connections' tokens, PKCE verifiers, consent links, recorded call contents, webhook destinations' URLs and signing secrets, task state, approval previews and the approval binding key, and the state a client echoes back in a multi-step request |
+| `ENCRYPTION_KEY` (secret) | none (required by `serve`) | 32 random bytes, base64 (`openssl rand -base64 32`). Encrypts every part of an MCP server's static credential, the credentials of its additional endpoints, people's own keys for servers, the portal's OAuth client secrets and servers' TLS client keys, identity signing keys, auth provider client secrets, people's provider tokens and shared service connections' tokens, PKCE verifiers, consent links, recorded call contents, webhook destinations' URLs and signing secrets, audit sinks' URLs and signing secrets, the audit checkpoint signing keys, task state, approval previews and the approval binding key, and the state a client echoes back in a multi-step request |
 | `ENCRYPTION_KEY_PREVIOUS` (secret) | none | The previous key during a rotation: values sealed with it still decrypt until `rotate-keys` re-encrypts them |
 | `API_KEY_PEPPER` (secret) | none (required by `serve`) | 32 random bytes, base64, different from the encryption key. Keys the HMAC that stores API keys, service account keys, automation tokens, provisioning tokens (`ompscim_`) and OAuth tokens. Rotate it with `API_KEY_PEPPER_PREVIOUS`, never by just replacing it |
 | `API_KEY_PEPPER_PREVIOUS` (secret) | none | The previous pepper: keys and tokens made with it (automation tokens too, since v0.2.0) keep working, and keys are re-digested on use. Must differ from `API_KEY_PEPPER` |
@@ -89,6 +90,16 @@ See [Secrets and key rotation](/docs/operate/secrets-and-key-rotation).
 | Setting | Default | Notes |
 |---|---|---|
 | `UPSTREAM_ALLOWED_NETWORKS` | none | Internal networks and hosts MCP servers (and auth providers' endpoints) may use besides public addresses. Comma-separated: a network or address (`10.20.0.0/16`, `fd00:1234::/32`, `10.20.0.5`) or a host name (`mcp.corp.example.com`, `*.corp.example.com` for subdomains only). Prefix an entry with `http:` to also allow plain http: `10.20.0.0/16,http:*.svc.cluster.local,mcp.corp.example.com`. Shown read-only in Admin › Internal networks; an invalid entry stops the server. See [Internal networks](/docs/administer/internal-networks) |
+
+## Audit stream
+
+The [audit stream](/docs/operate/audit-stream) is off by default. Checkpoints and webhook delivery have no setting: they are turned on with one-time `open-mcp-portal audit-stream` commands after the rollout.
+
+| Setting | Default | Notes |
+|---|---|---|
+| `AUDIT_STREAM_ENABLED` | `false` | `true` starts the sealer on this replica: audit entries are added to the hash-chained stream, and checkpoints and sinks can run once enabled. Set it on every replica. Once anything is sealed, turning it off again pauses audit deletion. Added in v0.14.0 |
+| `AUDIT_MIN_RETENTION_DAYS` | `30` | The floor below which audit entries are never deleted, 30 to 3,650 days. Read only by `migrate` (and `serve` with `MIGRATE_ON_START`), which writes it into a table only the migration owner can change. Every run writes it, so keep it set on the migrate job: a run without it sets the floor back to 30. See [Retention](/docs/administer/retention#the-audit-floor). Added in v0.14.0 |
+| `AUDIT_STREAM_ALLOWED_NETWORKS` | none | Internal networks and hosts that **audit sinks** may use besides public https addresses. Same syntax as `UPSTREAM_ALLOWED_NETWORKS` (`http:` before an entry allows plain http to it); separate from the notification webhooks' list on purpose. An invalid entry stops the server. Added in v0.15.1 |
 
 ## Notifications
 

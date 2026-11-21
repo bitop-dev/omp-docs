@@ -1,0 +1,81 @@
+---
+title: v0.15.3
+description: "Open MCP Portal v0.15.3, the release these docs describe: built with Go 1.26.11 for GO-2026-6859, a setting for the database pool size, provider credential fixes, retention purges that no longer read the whole call log, and held audit rows sent once. Migrations 00066 and 00067."
+---
+
+**Released 2026-11-21.** [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.3) · image `ghcr.io/bitop-dev/open-mcp-portal:v0.15.3` · migrations `00066` and `00067` (expand-only; the schema is at `00067`).
+
+**These docs describe v0.15.3.** It is a patch for [v0.15.2](/docs/releases/v0-15-2) with a security rebuild, one new setting and three fixes. Read [Upgrading](#upgrading): the new database pool size can need more PostgreSQL connections than before.
+
+## What changed
+
+- **Security: built with Go 1.26.11,** which fixes GO-2026-6859 in Go's `net/http`, a package the portal uses. v0.15.2 and earlier were built with Go 1.26.10. Dependencies are updated too (among them pgx, go-jose, goose and `golang.org/x/oauth2`).
+- **The database pool size is a setting** (#107). `DATABASE_MAX_CONNS` sets the connections in each replica's serving pool: **20** by default, 4 to 1000. Before, it was the PostgreSQL driver's default, the larger of 4 and the number of CPUs, which a slow identity provider could use up: a provider token refresh holds a connection for up to 10 seconds while it waits for an answer. A `pool_max_conns` already in `DATABASE_URL` is kept while the setting is unset. See [Configuration](/docs/operate/configuration#core) and [Scaling](/docs/operate/scaling#the-database).
+- **Provider credential fixes** (#107).
+  - When the portal can't read a server's linked auth provider from the database, the call now fails as an internal error. Before, a gateway call reported that the auth provider was turned off, and connecting reported a missing provider.
+  - A narrowed token refresh that comes back with an empty access token is refused (`provider_unavailable`) and never cached.
+  - A call that asked for a narrowed token is never sent the connection's broader stored token instead.
+- **Retention purges no longer read the whole call log** (#106). A purge batch of call records or recorded contents that found fewer rows than it asked for read every row, on every pass (up to over a second at a few hundred thousand rows). Each purge now starts its scan at the shortest period any row can have, so the same rows are deleted, oldest first, in under a millisecond.
+- **A held oversized audit row is sent once** (#93). A required full-profile [audit sink](/docs/administer/audit-stream#held-oversized-rows) that is held at an oversized row now sends that row's envelope once, instead of on every pass until someone acknowledges it. A failed send is retried with the usual backoff; an acknowledgement ends the hold; editing the sink (enabling or disabling it, or changing its destination, secret, profile or Required) sends the envelope once more to the new settings. **Admin › Audit stream** shows, next to the held sequence, when the receiver was sent it, or the last failure.
+
+## Upgrading
+
+From v0.15.2:
+
+1. **Check PostgreSQL's connection limit first.** Each replica now opens up to `DATABASE_MAX_CONNS` (20) serving connections, where it used to open the larger of 4 and its CPU count. Make sure `max_connections` (or your pooler) allows **replicas × pool size**, including a surge replica, plus the migration init containers and `doctor`. Set `DATABASE_MAX_CONNS` lower if it doesn't; a `pool_max_conns` you set in `DATABASE_URL` keeps working while the setting is unset. An invalid value also stops the Kubernetes migration init container. Check its logs if the pod stays in `Init:Error`.
+2. **Back up** the database with its keys, then pin the new image (verify its signature first, see [The image](#the-image)). `migrate` applies `00066` (the call-record purge function, restated with the same signature and permissions, and an index on recorded contents built concurrently) and `00067` (a protected table for held rows and three restated sink functions).
+3. **v0.15.2 replicas keep working** against the new schema during the rollout, and rolling back to v0.15.2 needs nothing. Neither migration needs a gate. While a v0.15.2 replica is the sink sender, it keeps resending a held envelope as before; receivers already discard identical duplicates.
+
+[Upgrading from v0.15.2](/docs/operate/migrations-and-upgrades#upgrading-from-v0152) has the same points.
+
+## Upgrading from an older release
+
+The migrations of every release in between apply in order in one `migrate` run (from v0.13.1, that is `00058` to `00067`). **A jump over several releases isn't rehearsed by the project's upgrade test**, which upgrades from the previous release only: back up, then upgrade release by release or rehearse the jump on a restored copy first, as [Upgrading across several releases](/docs/operate/migrations-and-upgrades#upgrading-across-several-releases) describes. Read every release page in between. What matters most:
+
+| Coming from | Do this |
+|---|---|
+| v0.3.x or earlier | Read [v0.13.1's table](/docs/releases/v0-13-1#upgrading-from-an-older-release) first: among other things, create the `open-mcp-portal-migrate` Secret on Kubernetes before you roll out v0.4.0 or later. |
+| v0.11.x or earlier | **Finish the rollout before you turn provisioning on** ([v0.12.0](/docs/releases/v0-12-0#upgrading)). |
+| v0.13.x | Expect definition scanning in Shadow after the upgrade, and an audit retention floor that can refuse your next retention change ([v0.14.0](/docs/releases/v0-14-0#upgrading)). Turn on audit streaming only after the rollout. |
+| v0.14.x | **Enable checkpoints and sinks only after every replica runs 0.15**; enabling checkpoints is one-way ([v0.15.1](/docs/releases/v0-15-1#upgrading)). Retire an old `ENCRYPTION_KEY` only with a 0.15 `rotate-keys`. |
+| v0.15.2 or earlier | Size PostgreSQL's `max_connections` for the new pool (above). |
+
+## Verification
+
+CI and the Kubernetes smoke, upgrade, and load gates passed. A three-replica Spark rehearsal with separate database roles passed the upgrade and two rollback and roll-forward cycles. After publication, an anonymous pull by digest, the image signature, both architectures' SBOM and provenance attestations, and all six CLI signatures were verified. The [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.3#evidence) records the checks.
+
+## Known limitations
+
+These apply to v0.15.3 as a whole:
+
+- **Real-world checks are still open.** An independent security review, VS Code, Cursor, a client that uses URL elicitation, real clients refreshing their tokens after an hour, real Google and Microsoft providers, a real Slack webhook and mail server, and a pilot with a real team ([roadmap](/docs/releases/roadmap#real-world-verification)).
+- **Definition scanning is heuristic and shadow only.** Its rules are public, English-only and lexical; nothing is blocked, and nothing scans call arguments or results. Zero findings never means safe.
+- **Audit streaming.** Webhook sinks and pull only (no syslog, OTLP or bulk export), not tested with a real SIEM; tamper-evident, not tamper-proof against someone who controls the running portal.
+- **Connections.** A provider token refresh still holds a database connection while it waits for the identity provider (#107), and every call opens its own connection to its MCP server (#105).
+- **Classes and approvals.** A tool's class is its team's assertion; "used" means an approval was spent, not that the call succeeded; governed calls fail closed while the approval lock is busy.
+- **Upstream protection.** Failover, not load balancing; each replica keeps its concurrency cap and breaker in memory.
+- **Provisioning.** One directory, matched by the OIDC subject only; tested with authentik only.
+- **Tools.** The `omp` command line uses automation tokens only and only its Linux build has been run; the GitHub Action hasn't run in a hosted runner; there is no Terraform provider.
+- Remote servers only (no stdio); development software that has not run in production.
+
+## The image
+
+`ghcr.io/bitop-dev/open-mcp-portal:v0.15.3` is signed with cosign keyless signing by the repository's `image.yml` workflow, now published from `github.com/bitop-dev/open-mcp-portal`. Its digest is:
+
+```text
+sha256:bae00dfda49eec8ed3dc0625b8276f677259d763da9f2904fd1ab8fab3212afa
+```
+
+Check the signature with **cosign v3.0 or newer**, then pin the image by that digest:
+
+```sh
+cosign verify ghcr.io/bitop-dev/open-mcp-portal@sha256:bae00dfda49eec8ed3dc0625b8276f677259d763da9f2904fd1ab8fab3212afa \
+  --certificate-identity https://github.com/bitop-dev/open-mcp-portal/.github/workflows/image.yml@refs/tags/v0.15.3 \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+Releases up to v0.15.2 were signed from the repository's old address, `github.com/ncecere/open-mcp-portal`; their pages give their identity. The `omp` binaries are signed by the same workflow; [The omp command line](/docs/api/cli) shows how to check one with `cosign verify-blob`. See [Install with Docker Compose](/docs/operate/compose) and [Install on Kubernetes](/docs/operate/kubernetes).
+
+## Reporting problems
+
+Open an issue at [github.com/bitop-dev/open-mcp-portal/issues](https://github.com/bitop-dev/open-mcp-portal/issues) (there is a form for each kind) or ask in [Discussions](https://github.com/bitop-dev/open-mcp-portal/discussions). Report security problems privately, as [`SECURITY.md`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/SECURITY.md) describes.

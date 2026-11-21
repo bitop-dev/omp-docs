@@ -1,0 +1,191 @@
+---
+title: Audit stream
+description: "For operators: turn on Open MCP Portal's sealed audit stream, pull it with a collector, sign checkpoints, push it to webhook sinks, recover it after a restore or failover, monitor it and roll back safely."
+---
+
+Open MCP Portal can seal its [audit log](/docs/administer/audit-log) into a **gapless, hash-chained stream** and get it off the host: a collector pulls it, or the portal pushes it to a webhook receiver such as a SIEM. A receiver that keeps what it got, and pinned the stream's id and checkpoint key, can tell when an entry is missing or was changed. This page is for the operators who turn it on and run it; platform admins manage receivers on [Admin › Audit stream](/docs/administer/audit-stream).
+
+It is **off by default** and switched on in three separate steps, each after the whole rollout:
+
+| Step | Turned on by | Added in | Reversible |
+|---|---|---|---|
+| Sealing and pull delivery | `AUDIT_STREAM_ENABLED=true` on every replica | v0.14.0 | Yes, but audit deletion then pauses ([below](#retention)) |
+| Signed checkpoints | `open-mcp-portal audit-stream enable-checkpoints --min-reader-version-ack` | v0.15.1 | **No**: one-way |
+| Webhook sinks | `open-mcp-portal audit-stream enable-sinks --min-reader-version-ack` | v0.15.1 | Yes, with `disable-sinks` and a drain |
+
+<Callout type="warn" title="Tamper-evident, not tamper-proof">
+The chain and the checkpoint signatures let a receiver detect a rewrite of what it already holds. They don't stop someone who controls the running portal or its database: the runtime holds the signing key and can write invented entries or stop sending. What bounds the damage is evidence your receivers stored earlier, so keep it, verify it, and alert on silence.
+</Callout>
+
+## Before you start
+
+- **Every replica runs the release.** Turn nothing on during a rolling upgrade.
+- **Plan storage.** Once the stream has sealed anything, audit entries are deleted only after they are sealed **and** acknowledged by every required collector and sink. A collector or sink that stops can grow the database without bound.
+- **Decide who receives what.** The **summary** profile carries each entry's time, action, actor, team, target and request ids; the **full** profile adds before-and-after values, which can include email addresses and other personal data. Recorded call contents are never in the stream.
+- **Know the commands.** `open-mcp-portal audit-stream status` reads the stream's state with `DATABASE_URL` and writes nothing. `rebind`, `rebase`, `enable-checkpoints`, `enable-sinks` and `disable-sinks` connect with the migration owner (`DATABASE_MIGRATE_URL`, else `DATABASE_URL`): don't give that credential to the serving replicas. `rotate-checkpoint-key` uses the runtime connection and needs `ENCRYPTION_KEY`. In Kubernetes, run them as a Job or with `kubectl exec` in a pod that has the right Secret.
+
+## Turning on sealing
+
+Set `AUDIT_STREAM_ENABLED=true` on **every** replica and restart them. A leader-elected sealer then adds each committed audit entry to the chain in order, even entries whose transactions commit out of order, and a daily sweep seals anything missed, flagged as late. Check it:
+
+```sh
+open-mcp-portal audit-stream status     # JSON: stream id, epoch, status, cursor, checkpoints, sinks gate
+```
+
+`status` should be `running`. Admin › Audit stream shows **Sealer (this replica)**: a replica without the setting seals nothing.
+
+## Pulling the stream
+
+A collector pulls with an [automation token](/docs/administer/automation-tokens) of scope `platform:read`; platform admins and auditors can pull from a browser session too.
+
+<Steps>
+<Step>
+
+### Register the collector
+
+A platform admin registers it as a **pull consumer** on Admin › Audit stream (or with `POST /v1/admin/settings/audit-consumers` from a browser session), choosing **Summary** or **Full**, and **Required** if retention must wait for it. A new consumer starts at the earliest entry still kept: it never claims history that retention already deleted.
+
+</Step>
+<Step>
+
+### Read batches
+
+`GET /v1/admin/audit/stream?after_seq=<last seq you stored>&limit=100&profile=summary` returns NDJSON records after that sequence, contiguous. `410 range_expired` (with `earliest_seq`) means retention deleted what you asked for: reconcile that loss deliberately. `500 audit_row_missing` is corruption, not a reason to skip ahead.
+
+</Step>
+<Step>
+
+### Verify, store, then acknowledge
+
+Check each record's hash and its link to the previous one (the record format is in the repository's [`docs/audit-record-v2.md`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/docs/audit-record-v2.md)), store it durably off the host, and only then `POST /v1/admin/audit/stream/ack` with `{"consumer":"<name>","seq":<last stored>}`.
+
+</Step>
+</Steps>
+
+**Oversized rows.** A full entry over the 16 MiB line limit arrives as an oversized envelope (its hash, size and a reference). A full consumer fetches the entry from `GET /v1/admin/audit/entries/{seq}/full?consumer=<name>` in chunks, checks it against the hash, and can't acknowledge past it before doing so.
+
+**The tip is a hint.** `GET /v1/admin/audit/stream/tip` is unsigned and advisory. Never reset a collector's state from it.
+
+The repository's [deployment guide](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/docs/deploy.md) shows a static Vector `http_client` source for trying this out. It replays from a fixed cursor, so it isn't a durable collector: in production, put a cursor-aware adapter in front.
+
+## Signed checkpoints
+
+Checkpoints let a receiver anchor history without trusting the database. The sealer leader signs where the chain stands with a dedicated **Ed25519** key of the install (not the key that signs identity tokens): every 10,000 entries, or every 15 minutes when there was at least one entry. An idle stream writes none.
+
+**Turn them on** after every replica and every receiver understands them, with the migration credentials:
+
+```sh
+open-mcp-portal audit-stream status
+open-mcp-portal audit-stream enable-checkpoints --min-reader-version-ack
+```
+
+It is a **one-way** step: the command records the running release as the minimum reader, and you must never roll back below it (v0.14.0 can't read checkpoint records). It refuses to run from a development or pre-release build. Turning checkpoints on is audited as `audit.checkpoints_enabled`.
+
+**The keys.** The private key is sealed with `ENCRYPTION_KEY`. The public keys are published, without authentication, at `<APP_URL>/.well-known/omp-audit-keys.json` (a JWK set, with each key's `active_from_seq` and `retired_at_seq`). Publication alone grants nothing: a receiver enrolls by pinning the stream id and the **currently active** key, fetched over TLS and confirmed out of band, for example against the fingerprint on Admin › Audit stream.
+
+**Rotate** the key by hand, about yearly, with the runtime credentials and the portal's key settings:
+
+```sh
+open-mcp-portal audit-stream rotate-checkpoint-key
+```
+
+It appends one handover checkpoint signed by both keys, retires the old key at that sequence and clears its private half. The old public key stays published for checking older checkpoints. Rotation is audited as `audit.checkpoint_key_rotated`. A retired key never regains authority, not even after a restore.
+
+`GET /v1/admin/audit/verify?from=&to=` re-checks the retained hashes, checkpoint signatures and key ranges and reports the first bad sequence. Receivers should run their own verification; the repository's reference verifier is in `internal/auditevidence/testdata/reference_verify.py`.
+
+## Webhook sinks
+
+A sink makes the portal **push** the stream: it POSTs NDJSON batches to an `https` receiver, in sequence order and at least once, signed, with no transaction held during the request. Platform admins create and test sinks on [Admin › Audit stream](/docs/administer/audit-stream#sinks); delivery stays inert until you enable it.
+
+**Destinations.** A public `https` address, by default. To use an internal receiver, list it in `AUDIT_STREAM_ALLOWED_NETWORKS` (the same syntax as `NOTIFY_WEBHOOK_ALLOWED_NETWORKS`, and separate from it; `http:` before an entry allows plain http to it). The host is resolved when the sink is saved and checked again at every connection; redirects and proxies are never used and TLS is always verified. In Kubernetes, allow the receiver in the NetworkPolicy's egress.
+
+**Turn delivery on** after every replica runs v0.15.1 or later, with the migration credentials, after the receivers are configured and their **Test** passed:
+
+```sh
+open-mcp-portal audit-stream status
+open-mcp-portal audit-stream enable-sinks --min-reader-version-ack
+```
+
+It is audited as `audit.sinks_gate`. Older releases' notification dispatchers silently drop the sink notifications, which is why the gate waits for the rollout.
+
+### What a receiver gets
+
+Each request carries:
+
+| Header | Value |
+|---|---|
+| `Content-Type` | `application/x-ndjson` |
+| `X-OMP-Event` | `audit.batch` (records), `audit.gap` (a declared missing range, after an admin resumed an expired sink) or `audit.test` (no records) |
+| `X-OMP-Audit-Stream` | The stream id |
+| `X-OMP-Audit-First-Seq`, `X-OMP-Audit-Last-Seq` | The range in the body |
+| `X-OMP-Delivery`, `Idempotency-Key` | The same delivery id, stable across retries of the same range |
+| `X-OMP-Attempt`, `X-OMP-Timestamp`, `X-OMP-Signature` | The attempt number, and the HMAC signature of notification webhooks: `v1=<hex>`, two values while a rotated secret is still valid |
+
+Answer `2xx` only after the batch is stored durably. Anything else is retried, backing off from 1 second up to 5 minutes. Verify the signature against the exact body before parsing it. The key is the secret's text as shown, not its base64-decoded bytes:
+
+```python
+import hashlib, hmac, time
+
+def authentic(secret, headers, body):
+    timestamp = headers['X-OMP-Timestamp']
+    if abs(time.time() - int(timestamp)) > 300:
+        return False
+    expected = hmac.new(secret.encode(), timestamp.encode() + b'.' + body,
+                        hashlib.sha256).hexdigest()
+    return any(hmac.compare_digest(part.strip(), 'v1=' + expected)
+               for part in headers['X-OMP-Signature'].split(','))
+```
+
+Then apply records **by sequence number**: a delayed retry can arrive after a newer range. Discard only identical duplicates; keep a record with a different hash at a sequence you already hold as fork evidence, and alert. Buffer records ahead of a gap, and alert on gaps and on silence. A delivery id helps you deduplicate; it proves nothing.
+
+### Held oversized rows
+
+A required sink with the Full profile stops before an entry too large for the stream and holds retention there until a platform admin saves the entry and acknowledges it ([Held oversized rows](/docs/administer/audit-stream#held-oversized-rows)). Since v0.15.3 the envelope is sent to the receiver once while the sink is held, and once more after any change to the sink's settings. During a rolling upgrade, a v0.15.2 or older replica that becomes the sender resends it on every pass, as those releases did; receivers discard the identical duplicates.
+
+## Recovery after a restore, upgrade or failover
+
+The stream knows which PostgreSQL cluster it was sealed in. When that changes, sealing either continues in a new **epoch** by itself or stops (`halted_incarnation`) until you say what happened:
+
+| What happened | What to do |
+|---|---|
+| Physical failover, switchover or point-in-time recovery | Nothing: a new epoch starts automatically. Watch `omp_audit_stream_epoch` |
+| `pg_upgrade` | Confirm the transaction history was preserved, then `open-mcp-portal audit-stream rebind` (only while halted). It records the new cluster without moving the epoch or position |
+| A logical restore (`pg_dump`/`pg_restore`) or a logical-replication cutover | **Stop the portal's writers**, then `open-mcp-portal audit-stream rebase` before serving again. It starts a new epoch from what the database holds. Rerun the same command if it was interrupted |
+| A known rewind, where receivers already hold higher sequence numbers | `open-mcp-portal audit-stream rebase --resume-after-seq=N`, with N above every sequence receivers hold. Receivers must approve the declared gap |
+
+Receivers accept a clean continuation by themselves; a rebase, a declared gap or anything that conflicts with what they hold is a **discontinuity** they approve locally, keeping the old records as evidence. Restoring a backup never restores a retired checkpoint key's authority. See also [Backups](/docs/operate/backups#restoring).
+
+## Retention
+
+Two rules protect audit entries, whether or not the stream is on (since v0.14.0):
+
+- **The floor.** Audit entries are kept at least as long as the longest call-record period (the platform's or any team's), and never less than `AUDIT_MIN_RETENTION_DAYS` (30 to 3,650 days, default 30). Only `migrate` writes that floor: set the variable on the **migrate** job. The database enforces both, and [Admin › Retention](/docs/administer/retention#the-audit-floor) refuses a period below them.
+- **The interlock.** As soon as the stream has sealed anything, or a pull consumer or a sink exists, audit entries are deleted only as a sealed prefix that every required consumer and required sink has acknowledged, and a required full consumer must have fetched each oversized entry first. Before that, entries are deleted by age as before. So **don't register a consumer or create a sink before sealing is on**: with nothing sealed, nothing could be deleted.
+
+## Monitoring
+
+| Metric | Watch for |
+|---|---|
+| `omp_audit_stream_state{state=…}` | Anything other than `running`, such as `halted_incarnation` |
+| `omp_audit_stream_lag_seconds` | The age of the oldest unsealed entry growing |
+| `omp_audit_stream_epoch`, `omp_audit_stream_late_total` | Any change: investigate |
+| `omp_audit_stream_integrity_errors_total` | Any increase |
+| `omp_audit_stream_consumer_lag`, `omp_audit_stream_sink_lag_records` | Growing lag (by profile or kind, and required) |
+| `omp_audit_stream_sinks_failing`, `omp_audit_stream_sink_deliveries_total` | Failing sinks |
+| `omp_audit_stream_entries_since_checkpoint`, `omp_audit_stream_last_checkpoint_timestamp_seconds` | Checkpoints that stopped |
+
+The shipped alert rules include `OMPAuditCheckpointStale`, `OMPAuditSinkFailing` and `OMPAuditSinkLag` ([Alert rules](/docs/operate/tracing#alert-rules)). Platform admins are also notified when a sink fails three times in a row and when it recovers.
+
+## Rolling back
+
+- **Sealing on:** an older binary still obeys the interlock but doesn't seal, so audit entries stop being deleted until you upgrade again. Budget the disk, and don't undo migration `00062` or replace the purge function to get deletion back.
+- **Checkpoints on:** never roll back below the minimum reader version that `enable-checkpoints` recorded.
+- **Sinks on:** before starting a release older than the sink minimum, run `open-mcp-portal audit-stream disable-sinks`, stop the senders, and let the current release deliver the pending sink notifications. Confirm with the migration role that this returns 0, and don't mark the events delivered by hand:
+
+  ```sql
+  SELECT count(*) FROM public.notification_events
+  WHERE event IN ('audit.sink_failing','audit.sink_recovered') AND fanned_out_at IS NULL;
+  ```
+
+  Disabling sinks doesn't release a required sink's retention hold.
+- **Keys:** once checkpoint keys or sink secrets exist, retire a previous `ENCRYPTION_KEY` only with a 0.15 release's `rotate-keys`; v0.14.0's doesn't know their columns ([Secrets and key rotation](/docs/operate/secrets-and-key-rotation)).
