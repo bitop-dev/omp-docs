@@ -12,6 +12,7 @@ Under the **Approval required** policy, platform admins decide what reaches the 
 Open a server to see its **Overview** (URL, health, auth mode, the team's note and the publishing history), its **Capabilities** with their full definitions and hints, and its **Health**. Things to look at:
 
 - **The capabilities' text.** Names, descriptions and schemas are prompts a model will read. Look for instructions aimed at the model, and treat the server's read-only or destructive hints as claims, not facts.
+- **The definition scan findings.** The **Approve…** dialog, like the Capabilities tab, lists what the portal's heuristics noticed in each definition: credential shapes, hidden Unicode, phrasing aimed at the model, very long text. They point you to where to read closely; they don't decide anything, and none found doesn't mean safe. **Rescan definitions** scans the stored definitions again. See [Definition scanning](/docs/administer/definition-scanning).
 - **The tool classes.** The team's owners and admins mark each tool **read**, **write** or **destructive**; tool scopes and [approval rules](/docs/administer/approval-rules) rely on them. Check that a tool marked read really only reads. You see the classes read-only; only the team changes them.
 - **The endpoint.** Is it the team's, and is it healthy? A failing server is flagged. A server can also have up to two **additional endpoints** for failover: you see each one's address, order and how its credential is placed, never a value. See [Protection and failover](/docs/teams/protection-and-failover).
 - **Governance.** The server's **Governance** card shows its owner, on-call contact, sensitivity label, lifecycle and next review. See [Server governance](/docs/administer/governance).
@@ -36,7 +37,7 @@ A published server can be taken off the catalog the same way: rejecting a publis
 
 ## Approve changed capabilities
 
-When a published server's capability changes, or a new one appears, it stays out of the catalog until approved, while the rest of the server stays published. The server's pending-changes count and the **changes** filter find them. On the Capabilities tab, read the new definition and **Approve change**. The approval names the capability's **fingerprint** you read; if the definition changed again before you approved, it is refused with the same "changed since review" answer. Under **Self-publish**, the team's owners and admins approve their own changes.
+When a published server's capability changes, or a new one appears, it stays out of the catalog until approved, while the rest of the server stays published. The server's pending-changes count and the **changes** filter find them. On the Capabilities tab, read the new definition and **Approve change**; its confirmation lists that capability's scan findings. The approval names the capability's **fingerprint** you read; if the definition changed again before you approved, it is refused with the same "changed since review" answer. Under **Self-publish**, the team's owners and admins approve their own changes.
 
 ## What comes back for review
 

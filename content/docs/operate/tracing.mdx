@@ -88,7 +88,7 @@ A test in the repository checks every metric and label the dashboards and rules 
 
 ## Alert rules
 
-[`deploy/prometheus/omp-alerts.yaml`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/deploy/prometheus/omp-alerts.yaml) has **14 alert rules**, with promtool unit tests (`omp-alerts.test.yaml`). Load the file with `rule_files:` in Prometheus. For the Prometheus Operator, the example overlay has the same rules as a `PrometheusRule` (`prometheusrule.yaml`) beside the `ServiceMonitor`. Neither is in the overlay's `resources:`, because they need the operator's CRDs: add them when the cluster has them.
+[`deploy/prometheus/omp-alerts.yaml`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/deploy/prometheus/omp-alerts.yaml) has **17 alert rules**, with promtool unit tests (`omp-alerts.test.yaml`). Load the file with `rule_files:` in Prometheus. For the Prometheus Operator, the example overlay has the same rules as a `PrometheusRule` (`prometheusrule.yaml`) beside the `ServiceMonitor`. Neither is in the overlay's `resources:`, because they need the operator's CRDs: add them when the cluster has them.
 
 The two "down" alerts match `job="open-mcp-portal"`, the name the example `ServiceMonitor` gives. Change it if your scrape configuration names the job otherwise.
 
@@ -108,6 +108,9 @@ The two "down" alerts match `job="open-mcp-portal"`, the name the example `Servi
 | `OMPUsageRollupStale` | warning | The usage rollup hasn't succeeded for an hour |
 | `OMPNoLoopLeader` | warning | No replica has led a background loop for 30 minutes |
 | `OMPNotificationDeliveryFailures` | warning | More than 3 notifications failed for good in an hour on one channel |
+| `OMPAuditCheckpointStale` | warning | Checkpoints are enabled and entries wait, but none has been signed for an hour (added in v0.15.1) |
+| `OMPAuditSinkFailing` | warning | An audit sink has had an open failure streak for 15 minutes (added in v0.15.1) |
+| `OMPAuditSinkLag` | warning | An audit sink is more than 100,000 records behind (added in v0.15.1) |
 
 Each alert links to its entry in the repository's [alert runbook](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/docs/phase6-operations.md#alert-runbook), which says what to check first. With tracing on, the runbook points you at a failing call's trace from its page.
 

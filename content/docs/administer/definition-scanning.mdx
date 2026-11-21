@@ -1,0 +1,37 @@
+---
+title: Definition scanning
+description: "Turn Open MCP Portal's definition scanning off or keep it in shadow mode, read its rule catalog, and use findings when you review servers."
+---
+
+Open MCP Portal scans every capability definition (tool, prompt, resource and resource template) with local heuristics when it reads a server's capabilities, and shows the findings to the server's team and to reviewers. It is **shadow only**: nothing is blocked, redacted, rewritten or approved because of a finding, and nothing is sent to an outside service. What a finding means, and where teams see them, is in [Definition scan findings](/docs/teams/definition-scanning).
+
+**Admin › Settings › Definition scanning** (`/admin/scanning`) holds the one setting and the rule catalog. Platform admins change the setting; auditors see the page read-only. It needs a browser session.
+
+<Screenshot slot="admin-definition-scanning" />
+
+## The mode
+
+| Mode | Does |
+|---|---|
+| **Shadow** (the default, also after an upgrade from v0.13) | Scans definitions at every refresh, and in a background pass for definitions stored before. Findings show beside the definitions. |
+| **Off** | Scans nothing. Capabilities show "Scanning disabled. No current scan is available." instead of findings. |
+
+There is no mode that blocks or redacts. Changes are saved with the page's revision (if someone else saved first, reload and choose again) and are audited as `settings.scanning_update`.
+
+## The rule catalog
+
+The **Rule catalog** section lists every rule of the ruleset compiled into the portal (`v1`, 32 rules) with its id, group and default severity: the credential shapes of the shared redaction rules (**secret**), Unicode tricks (**unicode**), English phrasing aimed at the model (**poison**) and over-long text (**length**). It is read-only: rules can't be added, switched off or tuned per install. A new ruleset comes with a release, and definitions scanned with an older one show as "not yet scanned under the current definition/ruleset" until the background pass reaches them.
+
+## Using findings in review
+
+When you approve a server or a changed capability, its findings are in the dialog, beside the definition. Treat them as pointers to where to read closely, not as a verdict:
+
+- A **high** finding, such as a credential shape, hidden Unicode or text that tells the model to keep something from the user, is worth asking the team about before you approve.
+- **info** and **low** findings (a link, a path, a long description) are often legitimate. Check that they fit what the tool does.
+- **No findings** proves nothing. Under **Self-publish** nobody reviews, so findings are only for the team.
+
+**Rescan definitions** in the dialog or on the server's Capabilities tab scans the stored definitions again without contacting the server. See [Catalog review](/docs/administer/catalog-review).
+
+## For operators
+
+Scanning needs no setting outside the web app. Each definition is limited to 64 KiB and a small time budget; a definition over either is recorded as an incomplete scan with its reason, never as clean. Only rule ids, severities, counts and locations are stored; the matched text never is, nor reaches logs, metrics or the audit log. The metrics `omp_scan_findings_total`, `omp_scan_duration_seconds`, `omp_scan_incomplete_total` and `omp_scan_ruleset_info` are listed in [Metrics](/docs/operate/metrics).

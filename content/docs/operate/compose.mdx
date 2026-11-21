@@ -43,7 +43,7 @@ make docker-omp                     # omp-cli:<git describe>, the omp command li
 
 No image is published for the `omp` command line; each release attaches signed binaries instead ([The omp command line](/docs/api/cli#install)).
 
-- The image is distroless: the binary is `/open-mcp-portal` (the entrypoint) and there is no shell. Commands: `serve` (default), `migrate`, `doctor`, `rotate-keys`, `version`.
+- The image is distroless: the binary is `/open-mcp-portal` (the entrypoint) and there is no shell. Commands: `serve` (default), `migrate`, `doctor`, `rotate-keys`, `audit-stream`, `version`.
 - It runs as UID/GID 65532, listens on port 8088 (`LISTEN_ADDR`) and needs no writable filesystem.
 - There's no `HEALTHCHECK` (no shell or curl): probe `/healthz` and `/readyz` from your orchestrator.
 - Multi-arch: `docker buildx build --platform linux/amd64,linux/arm64 --build-arg VERSION=… --build-arg COMMIT=… .` The web app and Go builds run on the build platform and cross-compile.

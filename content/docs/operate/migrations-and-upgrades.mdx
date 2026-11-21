@@ -1,6 +1,6 @@
 ---
 title: Migrations and upgrades
-description: How Open MCP Portal applies its forward-only database migrations, how to upgrade and roll back safely, and the notes for each release from v0.1.0 to v0.13.1.
+description: How Open MCP Portal applies its forward-only database migrations, how to upgrade and roll back safely, and the notes for each release from v0.1.0 to v0.15.3.
 ---
 
 ## Migrations
@@ -15,10 +15,15 @@ The database schema is managed by migrations built into the binary. They are **f
 
 ### Migrations per release
 
-v0.13.1's schema is at version **56**; v0.3.2's was at 26.
+v0.15.3's schema is at version **67**; v0.13.1's was at 56 and v0.3.2's at 26. There is no migration `00057`.
 
 | Release | Migrations | Before you rely on the new features |
 |---|---|---|
+| [v0.15.3](#upgrading-from-v0152) | `00066`, `00067` | Size PostgreSQL's `max_connections` for the new pool (`DATABASE_MAX_CONNS`, default 20) first |
+| [v0.15.2](#upgrading-from-v0151) | `00065` | None (indexes only) |
+| [v0.15.1](#upgrading-from-v0140) | `00063`, `00064` | Enable checkpoints (one-way) and sinks only after every replica runs 0.15 |
+| v0.15.0 | (`00063`, `00064`) | Tagged, never published: use v0.15.1 |
+| [v0.14.0](#upgrading-from-v0131) | `00058`–`00062` | Scanning starts in Shadow; the audit floor can refuse your next retention change; turn on audit streaming only after the rollout |
 | [v0.13.1](#upgrading-from-v0130) | none | Plain image swap |
 | [v0.13.0](#upgrading-from-v0120) | none | Plain image swap |
 | [v0.12.0](#upgrading-from-v0110) | `00051`–`00056` | Finish the rollout before enabling provisioning (SCIM) |
@@ -46,7 +51,7 @@ v0.13.1's schema is at version **56**; v0.3.2's was at 26.
 
 ### Upgrading across several releases
 
-`migrate` applies every pending migration in order in one run, so you can move from any release to v0.13.1 in one step. But the upgrade test (`k8s-upgrade`, the [smoke test](/docs/operate/kubernetes#smoke-test)'s `upgrade` scenario) only rehearses the previous release to the next one. **A direct jump from v0.3.2 to v0.13.1 has not been rehearsed.** Either upgrade release by release (v0.3.3, v0.4.0, v0.5.0 and so on, finishing each rollout, as the notes below describe), or rehearse the jump on a copy of your database first: restore a backup into a scratch database, run the v0.13.1 `migrate` against it, start one replica on it and run `doctor`.
+`migrate` applies every pending migration in order in one run, so you can move from any release to v0.15.3 in one step. But the upgrade test (`k8s-upgrade`, the [smoke test](/docs/operate/kubernetes#smoke-test)'s `upgrade` scenario) only rehearses the previous release to the next one. **A direct jump over several releases, say from v0.3.2 or v0.13.1 to v0.15.3, has not been rehearsed.** Either upgrade release by release (v0.3.3, v0.4.0, v0.5.0 and so on, finishing each rollout, as the notes below describe), or rehearse the jump on a copy of your database first: restore a backup into a scratch database, run the v0.15.3 `migrate` against it, start one replica on it and run `doctor`.
 
 Whichever you choose, read every section from your release up: v0.4.0 is breaking, and several releases need a drained rollout before a feature is turned on.
 
@@ -55,9 +60,45 @@ Whichever you choose, read every section from your release up: v0.4.0 is breakin
 Pin the previous image. Migrations are never rolled back automatically; because they are expand-only, the previous release normally runs on the newer schema. To undo a migration itself, restore the backup made before the upgrade. **Don't use `goose down`.**
 
 - **`00034` (v0.4.0) is forward-only.** Its Down doesn't restore trust in agent platforms or the relay accounts' keys, and you must not roll back to code that accepts external identity. Restoring a backup from before v0.4.0 also restores what it retired.
+- **Audit streaming.** Once the stream has sealed anything, an older image keeps the retention interlock but doesn't seal, so audit entries stop being deleted. Never roll back below the version `enable-checkpoints` recorded, and run `audit-stream disable-sinks` and drain before going below the sink minimum ([Audit stream](/docs/operate/audit-stream#rolling-back)).
 - **An older image doesn't roll back enforcement.** It ignores approval rules (v0.5.0), grant expiry (v0.6.0), tool scopes and curation (v0.4.0), server quotas and the breaker (v0.7.0), additional endpoints (v0.8.0), tasks (v0.9.0), governance (v0.10.0) and session generations (v0.12.0). Before pinning an older image, pause the affected calls or remove the reliance: turn rules off, revoke expiring grants or scoped credentials, remove extra endpoints. Don't let temporary access silently become permanent.
 - **Split database roles:** a binary older than v0.4.0 can't run retention under a restricted runtime login. Give it the owner credentials back, or accept retention failures until you upgrade again ([Database roles](/docs/operate/database-roles#rolling-back)).
 - Earlier migrations: going back past `00026`, `00025` or `00024` (v0.3.2), `00023` (v0.3.1) or `00020` (v0.3.0) would drop people's own keys for servers, the portal's OAuth clients and the TLS settings with their sealed keys, the provider access lists, the stored credential parts, the call records' trace ids and historical columns of the call history. A rollback to v0.3.0 ignores the credential parts table, so a server whose credential was saved as a list reads as having no credential until you save it as one header again (see [Upgrading from v0.3.0](#upgrading-from-v030)). A rollback to v0.3.1 ignores the v0.3.2 tables, so a server in each person's own key mode reads as one with no credential, a server in the portal's own OAuth client mode reads as one without authentication, and the TLS settings aren't used (see [Upgrading from v0.3.1](#upgrading-from-v031)).
+
+## Upgrading from v0.15.2
+
+v0.15.3 adds migrations `00066` and `00067`, both expand-only, and one setting. See the [v0.15.3 notes](/docs/releases/v0-15-3).
+
+- **Size the database's connections before you roll out.** Each replica's serving pool is now `DATABASE_MAX_CONNS` connections, **20** by default, where it was the larger of 4 and the replica's CPU count. Make sure PostgreSQL's `max_connections` (or your pooler) allows replicas × pool size, plus the migration job and `doctor`, or set `DATABASE_MAX_CONNS` lower. A `pool_max_conns` in `DATABASE_URL` is kept while the setting is unset. An invalid value stops startup.
+- **`00066`** restates the call-record purge function with the same signature, owner, grants and security settings, and builds an index on recorded contents concurrently (safe to rerun if interrupted). **`00067`** adds a protected table for held oversized audit rows and restates three sink functions with the same signatures.
+- **v0.15.2 replicas keep working** against the new schema, and rolling back to v0.15.2 needs nothing. Neither migration needs a gate. While a v0.15.2 replica sends to audit sinks, it resends a held oversized envelope on every pass, as before.
+- Built with Go 1.26.11, for GO-2026-6859 in `net/http`.
+
+## Upgrading from v0.15.1
+
+v0.15.2 adds migration `00065`, which builds three indexes with `CREATE INDEX CONCURRENTLY` (safe to rerun if interrupted) and changes no table, function or grant. There is no setting or API change; v0.15.1 replicas run unchanged against the new schema, and rolling back needs nothing. A reverse proxy in front sees `Vary: Accept-Encoding` and, when compressed, `Content-Encoding: gzip` on the web app's static files. See the [v0.15.2 notes](/docs/releases/v0-15-2).
+
+## Upgrading from v0.14.0
+
+v0.15.1 adds migrations `00063` (a protected schema, `omp_audit_ext`, and checkpoint keys) and `00064` (audit sinks), both expand-only. v0.15.0 was tagged but never published: go straight to v0.15.1. See the [v0.15.1 notes](/docs/releases/v0-15-1).
+
+- **Nothing changes until you enable it.** Checkpoints and sinks stay off; v0.14.0 replicas keep working against the new schema.
+- **Enable checkpoints only after every replica runs 0.15**, with `audit-stream enable-checkpoints --min-reader-version-ack` and the migration credentials. It is one-way: never roll back below the version it records.
+- **Enable sinks only after every replica runs 0.15**, with `audit-stream enable-sinks --min-reader-version-ack`, once receivers are set up and tested. Before rolling back below it: `disable-sinks`, stop senders, drain pending sink notifications.
+- **An internal sink receiver** needs `AUDIT_STREAM_ALLOWED_NETWORKS` and an egress rule.
+- **Key rotation:** once a checkpoint key or a sink exists, retire a previous `ENCRYPTION_KEY` only with a 0.15 `rotate-keys`.
+
+See [Audit stream](/docs/operate/audit-stream).
+
+## Upgrading from v0.13.1
+
+v0.14.0 adds migrations `00058` to `00062` (the audit stream's protected schema `omp_audit` and the stamping of audit entries, definition scanning, and the audit retention interlock), all expand-only. `00059` builds two indexes concurrently, outside a transaction, and is safe to rerun. See the [v0.14.0 notes](/docs/releases/v0-14-0).
+
+- **Run `migrate` with the migration role** as usual; it reconciles the runtime login's grants on the new schema. Set `AUDIT_MIN_RETENTION_DAYS` on the migrate job for a floor above 30 days.
+- **v0.13.1 replicas keep working** against the new schema during the rollout, and rolling back to v0.13.1 is supported. Replicas starting together no longer deadlock on the concurrent index build.
+- **Definition scanning starts in Shadow,** with a background pass over the definitions you have. Admin › Settings › Definition scanning turns it Off.
+- **The audit floor.** Audit entries are now kept at least as long as the longest call-record period and `AUDIT_MIN_RETENTION_DAYS`. If a call-record period is already longer than the audit period, the next retention change is refused until you fix it ([Retention](/docs/administer/retention#the-audit-floor)). Malformed retention settings now fail closed.
+- **Audit streaming stays off** (`AUDIT_STREAM_ENABLED=false`). Turn it on after the rollout ([Audit stream](/docs/operate/audit-stream)). After a logical restore, cutover or `pg_upgrade` of a database with streaming on, run the recovery command before serving writes.
 
 ## Upgrading from v0.13.0
 
@@ -254,7 +295,7 @@ The portal now refuses to start with an `ENCRYPTION_KEY` equal to the `API_KEY_P
 
 ### Migrate, then roll every replica
 
-Back up, pin the digest of the release you upgrade to (see [Install with Docker Compose](/docs/operate/compose#the-image) or [Install on Kubernetes](/docs/operate/kubernetes#the-image)), and run `migrate` once (the `migrate` init container, or `MIGRATE_ON_START` on a single instance). Then start **every** replica on it (at least v0.2.0). The current release, v0.13.1, includes v0.2.0's migrations and adds `00018` to `00056`, but a jump that long hasn't been rehearsed: see [Upgrading across several releases](#upgrading-across-several-releases), and read every later section, from [Upgrading from v0.2.0](#upgrading-from-v020) up to [Upgrading from v0.13.0](#upgrading-from-v0130).
+Back up, pin the digest of the release you upgrade to (see [Install with Docker Compose](/docs/operate/compose#the-image) or [Install on Kubernetes](/docs/operate/kubernetes#the-image)), and run `migrate` once (the `migrate` init container, or `MIGRATE_ON_START` on a single instance). Then start **every** replica on it (at least v0.2.0). The current release, v0.15.3, includes v0.2.0's migrations and adds `00018` to `00067`, but a jump that long hasn't been rehearsed: see [Upgrading across several releases](#upgrading-across-several-releases), and read every later section, from [Upgrading from v0.2.0](#upgrading-from-v020) up to [Upgrading from v0.15.2](#upgrading-from-v0152).
 
 </Step>
 <Step>

@@ -31,6 +31,8 @@ Team owners and admins publish from the **Company catalog** card on the server's
 - Under **Approval required**, **Request review…** asks for a review, with an optional **Note for the reviewer** (what the server is for, who should use it, anything they should check). The server becomes **Waiting for review**. **Withdraw request** stops the review and makes it private again.
 - Under **Self-publish**, **Publish…** publishes at once, with its current capabilities approved as they are. Read them on the Capabilities tab first.
 
+Both dialogs show the server's [definition scan findings](/docs/teams/definition-scanning) first, with **Rescan definitions**: look at anything they point to before you send the server on. They never stop you publishing.
+
 <Screenshot slot="publish-request" />
 
 A server can't be published while it's disabled, or before its capabilities have been read from its current URL (for an OAuth server, before someone authorized it to read them).

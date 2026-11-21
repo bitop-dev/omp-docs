@@ -3,11 +3,13 @@ title: Releases
 description: "Open MCP Portal's releases, which versions are supported, what to expect before 1.0, and how releases are published."
 ---
 
-These docs describe **v0.15.3** {/* RELEASE-TODO: v0.15.3 release date */}([GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.3)). The full history is in the repository's [changelog](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/CHANGELOG.md) and [releases](https://github.com/bitop-dev/open-mcp-portal/releases). What comes next is on the [roadmap](/docs/releases/roadmap).
+{/* RELEASE-TODO: add v0.15.3's release date to the next line, and replace YYYY-MM-DD in the table */}
+
+These docs describe **v0.15.3** ([GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.15.3)). The full history is in the repository's [changelog](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/CHANGELOG.md) and [releases](https://github.com/bitop-dev/open-mcp-portal/releases). What comes next is on the [roadmap](/docs/releases/roadmap).
 
 | Release | Date | In short |
 |---|---|---|
-| [v0.15.3](/docs/releases/v0-15-3) | YYYY-MM-DD {/* RELEASE-TODO: date */} | Built with Go 1.26.11 (GO-2026-6859); `DATABASE_MAX_CONNS`; provider credential fixes; retention purges that don't read the whole call log; held audit rows sent once. Migrations `00066` and `00067`. |
+| [v0.15.3](/docs/releases/v0-15-3) | YYYY-MM-DD | Built with Go 1.26.11 (GO-2026-6859); `DATABASE_MAX_CONNS`; provider credential fixes; retention purges that don't read the whole call log; held audit rows sent once. Migrations `00066` and `00067`. |
 | [v0.15.2](/docs/releases/v0-15-2) | 2026-11-10 | A hardening pass with no behaviour change: fewer database round trips per gateway request, a compressed web app, faster admin queries. Migration `00065` (indexes only). |
 | [v0.15.1](/docs/releases/v0-15-1) | 2026-11-06 | Signed audit checkpoints and audit webhook sinks with Admin › Audit stream, both off until enabled. Migrations `00063` and `00064`. |
 | v0.15.0 | 2026-11-06 | **Tagged, never published:** its image failed the vulnerability scan. v0.15.1 replaces it. |

@@ -16,6 +16,7 @@
     "health-and-doctor",
     "metrics",
     "tracing",
+    "audit-stream",
     "backups",
     "security"
   ]

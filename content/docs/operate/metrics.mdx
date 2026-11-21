@@ -25,7 +25,13 @@ Labels never carry user, key, service account, team or request IDs. Gateway, ser
 | `omp_notification_deliveries_total` | `channel`, `event`, `outcome` |
 | `omp_notification_emit_errors_total` | |
 | `omp_automation_token_auth_total` | `result` |
-| `omp_db_pool_*` | Connections acquired, idle, total and maximum; acquires, empty acquires and wait time |
+| `omp_db_pool_*` | Connections acquired, idle, total and maximum (`omp_db_pool_max_connections` is `DATABASE_MAX_CONNS`); acquires, empty acquires and wait time |
+| `omp_scan_findings_total` | `stage` (`definition`), `rule`, `action`: definition scan findings, without content or object ids. Added in v0.14.0 |
+| `omp_scan_duration_seconds`, `omp_scan_incomplete_total`, `omp_scan_ruleset_info` | `stage`; `reason` (incomplete scans); `version` (the ruleset compiled in). Added in v0.14.0 |
+| `omp_audit_stream_state`, `omp_audit_stream_epoch`, `omp_audit_stream_lag_seconds`, `omp_audit_stream_sealed_total`, `omp_audit_stream_late_total` | `state` (the stream's state, `running` or a halt): the [audit stream](/docs/operate/audit-stream#monitoring)'s state, epoch, the age of the oldest unsealed entry, entries sealed and entries the safety sweep recovered. Added in v0.14.0 |
+| `omp_audit_stream_integrity_errors_total`, `omp_audit_stream_consumer_lag` | `kind`; `profile`, `required` (the largest lag, never consumer names). Added in v0.14.0 |
+| `omp_audit_stream_checkpoints_enabled`, `omp_audit_stream_checkpoints_total`, `omp_audit_stream_entries_since_checkpoint`, `omp_audit_stream_last_checkpoint_timestamp_seconds` | Signed checkpoints. Added in v0.15.1 |
+| `omp_audit_stream_sinks_failing`, `omp_audit_stream_sink_lag_records`, `omp_audit_stream_sink_deliveries_total` | `kind`, `required`; `kind`, `result`. Audit sinks, never their names or hosts. Added in v0.15.1 |
 
 Plus the Go runtime and process collectors. `omp_mcp_requests_total` counts requests to `/mcp/{slug}` that reached a gateway.
 
@@ -33,7 +39,7 @@ Plus the Go runtime and process collectors. `omp_mcp_requests_total` counts requ
 
 ## Dashboards and alert rules
 
-The repository ships **five Grafana dashboards** (MCP traffic, MCP servers, providers and tokens, notifications, platform) and **14 Prometheus alert rules** with unit tests and a runbook entry each, built from the metrics above. A test checks every metric and label they use against the portal's metric registry. The rate-limit and loop-leader rules group by `limit` and `loop`, so they also cover server quotas and the governance loop; no shipped rule covers `omp_server_circuit_state`. [Tracing, dashboards and alerts](/docs/operate/tracing#dashboards) has the list, how to load them and `make prom-check`; the example overlay has a `PrometheusRule` beside the `ServiceMonitor`. They have not been checked against live data.
+The repository ships **five Grafana dashboards** (MCP traffic, MCP servers, providers and tokens, notifications, platform) and **17 Prometheus alert rules** with unit tests and a runbook entry each, built from the metrics above. A test checks every metric and label they use against the portal's metric registry. The rate-limit and loop-leader rules group by `limit` and `loop`, so they also cover server quotas and the governance loop; no shipped rule covers `omp_server_circuit_state`. [Tracing, dashboards and alerts](/docs/operate/tracing#dashboards) has the list, how to load them and `make prom-check`; the example overlay has a `PrometheusRule` beside the `ServiceMonitor`. They have not been checked against live data.
 
 ## Useful alerts
 
@@ -48,5 +54,6 @@ Conditions worth alerting on, whether or not a shipped rule covers them:
 - A rising `omp_mcp_rate_limited_total{limit="server_per_minute"}` or `{limit="server_busy"}`: a server's quota or concurrency cap refuses calls ([Protection and failover](/docs/teams/protection-and-failover)).
 - No replica with `omp_loop_leader{loop="governance"} == 1`: overdue reviews and sunset notices aren't being sent.
 - A high rate of `omp_mcp_rate_limited_total`, or of `omp_provider_token_refresh_total{result="unavailable"}`.
+- With the audit stream on: `omp_audit_stream_state{state="running"} == 0`, a growing `omp_audit_stream_lag_seconds`, any `omp_audit_stream_integrity_errors_total`, or a change of `omp_audit_stream_epoch` ([Audit stream](/docs/operate/audit-stream#monitoring)).
 
 Traces are covered in [Tracing, dashboards and alerts](/docs/operate/tracing). They link to metrics only through the trace id on a call's record: exemplars are not built.

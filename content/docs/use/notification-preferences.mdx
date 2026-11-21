@@ -31,6 +31,7 @@ Both are **on** by default. A switch applies to notifications from then on: turn
 | A server's setup sign-in lapsed (`upstream_signin.lapsed`) | Owners, admins and editors of the team |
 | A server was approved or rejected (`publish.decided`) | Owners and admins of the team |
 | A server is waiting for review (`publish.requested`) | Platform admins |
+| An audit sink is failing (`audit.sink_failing`), and when it recovered (`audit.sink_recovered`) | Platform admins. The page lists these two by their event names ([Audit stream](/docs/administer/audit-stream#failure-notices)) |
 | A key or token is about to expire (`key.expiring`) | You, for your own personal API keys. Owners and admins of the team, for its service account keys and publisher tokens. Owners, admins and editors of the team, for a server's mTLS client certificate. Platform admins, for platform tokens |
 | A connected account needs reconnecting (`connection.needs_reconsent`) | You, about your own connections. The owning team's owners and admins, about a team's [shared connection](/docs/teams/service-connections) |
 | A tool call is waiting for approval (`approval.requested`) | The people who may review it now, never the requester ([Approvals](/docs/use/approvals)) |

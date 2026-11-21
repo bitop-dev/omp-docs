@@ -23,6 +23,8 @@ The **Capabilities** tab lists what was read, by kind, with each item's descript
 Names, descriptions and schemas come from the server, and a model reads them as instructions. Read them before you publish a server or approve a change.
 </Callout>
 
+Every definition read is also checked with local heuristics, and what they notice (credential shapes, hidden Unicode, instructions aimed at the model, over-long text) is listed under **Definition scan findings** on the same tab. Findings only inform you: they block nothing, and no findings doesn't mean safe. See [Definition scan findings](/docs/teams/definition-scanning).
+
 ## Fingerprints and changes
 
 The portal stores each capability's definition as canonical JSON (sorted keys, without `_meta`, which servers use for data that changes between calls) and its SHA-256 **fingerprint**. On each refresh it compares:
@@ -32,7 +34,7 @@ The portal stores each capability's definition as canonical JSON (sorted keys, w
 - **New**: on a published server, a capability listed for the first time isn't approved either.
 - **Gone**: a capability the server no longer lists. Its approval is withdrawn; if it comes back, it needs approval like a new one.
 
-A refresh never approves anything. The server's pending-changes count covers changed and new capabilities. Each refresh reports how many were listed, added, changed and gone, and is recorded in the audit log.
+A refresh never approves anything, and [definition scan findings](/docs/teams/definition-scanning) never enter a fingerprint or an approval. The server's pending-changes count covers changed and new capabilities. Each refresh reports how many were listed, added, changed and gone, and is recorded in the audit log.
 
 Who approves: a platform admin under **Approval required**; the team's owners and admins under **Self-publish** (**Approve change** on the capability, after reading its definition). The approval names the fingerprint that was read: if the definition changed again before the button was pressed, it is refused (`changed_since_review`) and you read it again. Private servers need no approval for the team's own gateways: a team gateway serves the team's own servers' capabilities as they are now. See [Publishing and review](/docs/teams/publishing).
 

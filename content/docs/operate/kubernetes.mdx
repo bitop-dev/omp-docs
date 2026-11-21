@@ -11,7 +11,9 @@ Since v0.4.0 the `migrate` init container reads its database URL from a separate
 
 ## The image
 
-The base and the overlay use `ghcr.io/ncecere/open-mcp-portal`; the base sets the tag `v0.15.3`. Check the signature of the release you deploy (cosign v3.0 or newer), then put its digest in the overlay's `images:`. The digest of v0.15.3 is {/* RELEASE-TODO: v0.15.3 digest (here, below and in the images: entry; these are v0.15.2's) */}`sha256:e30bef6f56de186a39431ecde67a35dc155d5c33e597918a47a3a0644a8c2c28` (each release also attaches it as `open-mcp-portal-<tag>.digest.txt`):
+{/* RELEASE-TODO: v0.15.3 digest in this paragraph, the cosign command and the images: entry (these are v0.15.2's) */}
+
+The base and the overlay use `ghcr.io/ncecere/open-mcp-portal`; the base sets the tag `v0.15.3`. Check the signature of the release you deploy (cosign v3.0 or newer), then put its digest in the overlay's `images:`. The digest of v0.15.3 is `sha256:e30bef6f56de186a39431ecde67a35dc155d5c33e597918a47a3a0644a8c2c28` (each release also attaches it as `open-mcp-portal-<tag>.digest.txt`):
 
 ```sh
 cosign verify ghcr.io/ncecere/open-mcp-portal@sha256:e30bef6f56de186a39431ecde67a35dc155d5c33e597918a47a3a0644a8c2c28 \

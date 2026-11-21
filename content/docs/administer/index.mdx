@@ -24,12 +24,14 @@ Platform roles don't reach into teams' content: a platform admin uses a team's g
   <Card title="Automation tokens" href="/docs/administer/automation-tokens">Platform tokens for CI and scripts that call the management API.</Card>
   <Card title="Audit log" href="/docs/administer/audit-log">Every administrative change and sign-in.</Card>
   <Card title="Usage and calls" href="/docs/administer/usage-and-calls">Calls through every gateway, and the usage dashboard.</Card>
-  <Card title="Notifications" href="/docs/administer/notifications">The inbox, email and webhooks: the 15 events, who gets them, and signed JSON.</Card>
+  <Card title="Definition scanning" href="/docs/administer/definition-scanning">Heuristic findings on capability definitions, in shadow mode, and the rule catalog.</Card>
+  <Card title="Audit stream" href="/docs/administer/audit-stream">The sealed audit stream: webhook sinks to a SIEM, pull consumers, retention holds and held rows.</Card>
+  <Card title="Notifications" href="/docs/administer/notifications">The inbox, email and webhooks: the 17 events, who gets them, and signed JSON.</Card>
   <Card title="Limits" href="/docs/administer/limits">Rate limits on gateways and upstream servers: defaults, ceilings and team overrides.</Card>
   <Card title="Retention" href="/docs/administer/retention">How long call records, contents, the audit log and usage are kept.</Card>
   <Card title="Payload capture" href="/docs/administer/payload-capture">Redaction rules and patterns for recorded call contents.</Card>
 </Cards>
 
-The admin sidebar groups these pages as **People** (Users, Teams, Provisioning), **Catalog** (MCP servers, Publishing, Internal networks), **Access** (Approval rules, Gateways, Trusted clients, Auth providers, Automation tokens), **Records** (Audit log, Calls, Usage) and **Operations** (Limits, Retention, Payload capture, Notifications).
+The admin sidebar groups these pages as **People** (Users, Teams, Provisioning), **Catalog** (MCP servers, Publishing, Internal networks), **Access** (Approval rules, Gateways, Trusted clients, Auth providers, Automation tokens), **Records** (Audit log, Calls, Usage), **Settings** (Definition scanning) and **Operations** (Audit stream, Limits, Retention, Payload capture, Notifications).
 
 Settings that must exist before the database is read (addresses, sign-in, keys) are environment variables; see [Configuration](/docs/operate/configuration).
