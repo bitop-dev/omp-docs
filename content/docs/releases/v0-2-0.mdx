@@ -3,7 +3,7 @@ title: v0.2.0
 description: "Open MCP Portal v0.2.0 (2026-10-18): the MCP 2026-07-28 revision next to every older one, an admin overview, notifications, automation tokens, and fixes from a security review of v0.1.0."
 ---
 
-**Released 2026-10-18.** [GitHub release](https://github.com/ncecere/open-mcp-portal/releases/tag/v0.2.0) · image `ghcr.io/ncecere/open-mcp-portal:v0.2.0` · migrations `00014` to `00017` (after v0.1.0's `00001` to `00013`).
+**Released 2026-10-18.** [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.2.0) · image `ghcr.io/ncecere/open-mcp-portal:v0.2.0` · migrations `00014` to `00017` (after v0.1.0's `00001` to `00013`).
 
 v0.2.0 adds support for the MCP 2026-07-28 revision, the pieces a pilot needs to run the portal day to day (an admin overview, notifications and automation tokens), and fixes from a security review of v0.1.0. Read [Upgrading](#upgrading) first.
 
@@ -24,7 +24,7 @@ Gateways at `/mcp/{slug}` now speak the 2026-07-28 revision next to 2024-11-05, 
 
 ## Security fixes
 
-A review of v0.1.0 (the [threat model](https://github.com/ncecere/open-mcp-portal/blob/v0.2.0/docs/threat-model.md)) found four issues, all fixed here:
+A review of v0.1.0 (the [threat model](https://github.com/bitop-dev/open-mcp-portal/blob/v0.2.0/docs/threat-model.md)) found four issues, all fixed here:
 
 - **F-1** Changing a server's URL to another origin no longer sends its stored header value to the new host. The change is refused unless the same request supplies a new value (or removes the header), and OAuth servers go back to sign-in.
 - **F-2** Approving a server or a capability is bound to what the reviewer saw. The review dialog sends the digest it displayed, and an approval of something that changed in between is refused (`409 changed_since_review`). **This changes the API:** scripts that approve must send `expectedDigest` or `expectedFingerprint`. See [Publishing and review](/docs/teams/publishing#approvals-name-what-was-reviewed).
@@ -93,4 +93,4 @@ cosign verify ghcr.io/ncecere/open-mcp-portal@sha256:54033a775d1f15748588de86d57
 
 ## Reporting problems
 
-Open an issue at [github.com/ncecere/open-mcp-portal/issues](https://github.com/ncecere/open-mcp-portal/issues). Report security problems privately, as [`SECURITY.md`](https://github.com/ncecere/open-mcp-portal/blob/v0.2.0/SECURITY.md) describes.
+Open an issue at [github.com/bitop-dev/open-mcp-portal/issues](https://github.com/bitop-dev/open-mcp-portal/issues). Report security problems privately, as [`SECURITY.md`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.2.0/SECURITY.md) describes.

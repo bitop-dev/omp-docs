@@ -12,20 +12,22 @@ It is a separate binary from the portal's own `open-mcp-portal`, which runs the 
 Each release attaches six binaries, `omp-<tag>-<os>-<arch>` (`.exe` on Windows), for linux, darwin and windows on amd64 and arm64. Each has a cosign bundle (`.sigstore.json`, keyless, signed by the same `image.yml` workflow as the image) and is listed in the release's `checksums.txt`. Verify both before you run it (cosign v3.0 or newer):
 
 ```sh
-cosign verify-blob omp-v0.13.1-linux-amd64 \
-  --bundle omp-v0.13.1-linux-amd64.sigstore.json \
-  --certificate-identity https://github.com/ncecere/open-mcp-portal/.github/workflows/image.yml@refs/tags/v0.13.1 \
+cosign verify-blob omp-v0.15.3-linux-amd64 \
+  --bundle omp-v0.15.3-linux-amd64.sigstore.json \
+  --certificate-identity https://github.com/bitop-dev/open-mcp-portal/.github/workflows/image.yml@refs/tags/v0.15.3 \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 sha256sum --ignore-missing -c checksums.txt
-chmod +x omp-v0.13.1-linux-amd64 && mv omp-v0.13.1-linux-amd64 /usr/local/bin/omp
+chmod +x omp-v0.15.3-linux-amd64 && mv omp-v0.15.3-linux-amd64 /usr/local/bin/omp
 ```
+
+Binaries of releases up to v0.15.2 were signed from the repository's old address: their identity is `https://github.com/ncecere/open-mcp-portal/.github/workflows/image.yml@refs/tags/<tag>`.
 
 Release verification runs the Linux binary; the macOS and Windows binaries are signed, checksummed and reproduced byte for byte, but their execution isn't tested.
 
 From a checkout of the repository: `make build-omp` writes `bin/omp`, and `make docker-omp` builds a distroless container image, `omp-cli:<version>`, whose entrypoint is `/omp`:
 
 ```sh
-docker run --rm -e OMP_URL -e OMP_TOKEN omp-cli:v0.13.1 servers list --json
+docker run --rm -e OMP_URL -e OMP_TOKEN omp-cli:v0.15.3 servers list --json
 ```
 
 ## Sign in with a token

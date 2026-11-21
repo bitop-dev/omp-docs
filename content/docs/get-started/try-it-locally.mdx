@@ -3,7 +3,7 @@ title: Try it locally
 description: Run Open MCP Portal on your own machine with Docker Compose and a fake MCP server, register the server, build a gateway and call it.
 ---
 
-The repository has a demo: Open MCP Portal, PostgreSQL and a fake MCP server in Docker Compose, with development sign-in so you don't need an identity provider. You need Docker with Compose and a clone of the [repository](https://github.com/ncecere/open-mcp-portal).
+The repository has a demo: Open MCP Portal, PostgreSQL and a fake MCP server in Docker Compose, with development sign-in so you don't need an identity provider. You need Docker with Compose and a clone of the [repository](https://github.com/bitop-dev/open-mcp-portal).
 
 <Callout type="warn" title="Development only">
 The demo uses development sign-in (anyone can pick a persona) and the public example keys from `.env.example`. The portal accepts them only because the demo's `APP_URL` is a loopback address, and the port is published on `127.0.0.1` only. Never expose the demo or reuse its settings for a real install: see [Install with Docker Compose](/docs/operate/compose).
@@ -12,7 +12,7 @@ The demo uses development sign-in (anyone can pick a persona) and the public exa
 ## Start it
 
 ```sh
-git clone --branch v0.13.1 https://github.com/ncecere/open-mcp-portal
+git clone --branch v0.15.3 https://github.com/bitop-dev/open-mcp-portal
 cd open-mcp-portal
 make demo        # docker compose -f compose.demo.yaml up --build
 ```

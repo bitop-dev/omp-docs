@@ -3,7 +3,7 @@ title: v0.2.1
 description: "Open MCP Portal v0.2.1 (2026-10-18): a Test connection that exercises the identity token, a cap on dynamically registered OAuth clients, and a Kubernetes smoke test. No migrations."
 ---
 
-**Released 2026-10-18.** [GitHub release](https://github.com/ncecere/open-mcp-portal/releases/tag/v0.2.1) · image `ghcr.io/ncecere/open-mcp-portal:v0.2.1` · no migrations (the last are v0.2.0's `00014` to `00017`).
+**Released 2026-10-18.** [GitHub release](https://github.com/bitop-dev/open-mcp-portal/releases/tag/v0.2.1) · image `ghcr.io/ncecere/open-mcp-portal:v0.2.1` · no migrations (the last are v0.2.0's `00014` to `00017`).
 
 A small release after [v0.2.0](/docs/releases/v0-2-0): a better **Test connection**, a cap on open client registration, and the project's first real Kubernetes smoke test. Nothing must change to upgrade.
 
@@ -35,7 +35,7 @@ Carried over from v0.2.0 unless marked new:
 - **A real Google or Microsoft delegated-credentials provider** has not been run (only GitHub has, end to end). Real SMTP over TLS and a real Slack webhook have not been run either.
 - **The smoke test (new)** does not test NetworkPolicy on its default CNI, ingress and TLS, OIDC, zone spreading, upgrades or restores; and with its development sign-in the portal allows private HTTP upstreams, so it can't prove the internal-network allowlist.
 - **A server that refuses an Authorization header only when a tool runs** passes Test (see above).
-- **Open threat-model ideas:** see the status table in [the threat model](https://github.com/ncecere/open-mcp-portal/blob/v0.2.1/docs/threat-model.md#9-hardening-ideas-not-findings), and [Hardening status](/docs/operate/security#hardening-status).
+- **Open threat-model ideas:** see the status table in [the threat model](https://github.com/bitop-dev/open-mcp-portal/blob/v0.2.1/docs/threat-model.md#9-hardening-ideas-not-findings), and [Hardening status](/docs/operate/security#hardening-status).
 - Remote servers only (no stdio); development software that has not run in production.
 
 ## The image
@@ -58,4 +58,4 @@ See [Install with Docker Compose](/docs/operate/compose) and [Install on Kuberne
 
 ## Reporting problems
 
-Open an issue at [github.com/ncecere/open-mcp-portal/issues](https://github.com/ncecere/open-mcp-portal/issues) (there is a form for each kind) or ask in [Discussions](https://github.com/ncecere/open-mcp-portal/discussions). Report security problems privately, as [`SECURITY.md`](https://github.com/ncecere/open-mcp-portal/blob/v0.2.1/SECURITY.md) describes.
+Open an issue at [github.com/bitop-dev/open-mcp-portal/issues](https://github.com/bitop-dev/open-mcp-portal/issues) (there is a form for each kind) or ask in [Discussions](https://github.com/bitop-dev/open-mcp-portal/discussions). Report security problems privately, as [`SECURITY.md`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.2.1/SECURITY.md) describes.

@@ -1,8 +1,8 @@
 # Open MCP Portal docs
 
-The user, team, administrator, operator and server-author documentation for [Open MCP Portal](https://github.com/ncecere/open-mcp-portal), the self-hosted portal to a company's MCP servers: teams register servers, publish them to a catalog and curate gateways that people and agents connect to. It's published at <https://docs.omp.bitop.dev>; the product's website is <https://omp.bitop.dev>. Both addresses, the repositories and the release the docs describe are in `lib/site.ts`.
+The user, team, administrator, operator and server-author documentation for [Open MCP Portal](https://github.com/bitop-dev/open-mcp-portal), the self-hosted portal to a company's MCP servers: teams register servers, publish them to a catalog and curate gateways that people and agents connect to. It's published at <https://docs.omp.bitop.dev>; the product's website is <https://omp.bitop.dev>. Both addresses, the repositories and the release the docs describe are in `lib/site.ts`.
 
-These pages are for the people who use gateways, the team owners and admins who register servers and build gateways, platform admins, operators, and MCP server authors. The Open MCP Portal repository's own `docs/` folder stays the engineering record (design, decisions and "As built" notes). The docs describe **Open MCP Portal v0.13.1**, released on 2026-11-01; the product tag is `v0.13.1`.
+These pages are for the people who use gateways, the team owners and admins who register servers and build gateways, platform admins, operators, and MCP server authors. The Open MCP Portal repository's own `docs/` folder stays the engineering record (design, decisions and "As built" notes). The docs describe **Open MCP Portal v0.15.3**; the product tag is `v0.15.3`. (Its publication date and image digest are filled in after the release is published: see `RELEASE-TODO.md` while it exists.)
 
 A static site: [Fumadocs](https://fumadocs.dev) on Next.js with `output: "export"`, TypeScript and Tailwind CSS v4, served by nginx in a container. Search is Fumadocs' built-in static index, searched in the browser. No tracking, no cookies, no external fonts or CDNs: Inter is self-hosted.
 
@@ -24,7 +24,7 @@ npm run dev          # http://localhost:3000
 | `npm run check:links` | Checks every internal link and anchor in `out/` (run after a build; the generated API reference is skipped). |
 | `npm run typecheck` | TypeScript. |
 | `npm start` | Serves `out/` locally. |
-| `npm run sync:openapi` | Refreshes `openapi/open-mcp-portal.yaml` from a product checkout (`$OMP_REPO`, else `../open-mcp-portal` or `../golang/open-mcp-portal`), or from GitHub at a tag: `npm run sync:openapi -- v0.13.1`. |
+| `npm run sync:openapi` | Refreshes `openapi/open-mcp-portal.yaml` from a product checkout (`$OMP_REPO`, else `../open-mcp-portal` or `../golang/open-mcp-portal`), or from GitHub at a tag: `npm run sync:openapi -- v0.15.3`. |
 | `npm run brand` | Regenerates `app/brand.css` from the product's theme (below). |
 | `npm run logo -- <chosen>` | Copies the logo from `../omp-assets/logo/<chosen>/` (below). |
 | `npm run screenshots` | Imports screenshots (below). |
@@ -69,7 +69,7 @@ SCREENSHOTS.md                the capture list for the screenshot session
 
 ### API reference
 
-`npm run sync:openapi` copies the product's `api/openapi.yaml` into `openapi/open-mcp-portal.yaml`. Review the diff and rebuild: there is one page per operation, grouped by the operation's first tag (sidebar labels in `lib/openapi.ts`). Sync from the release's tag (`npm run sync:openapi -- v0.13.1`); the copy in the repository matches v0.13.1's contract.
+`npm run sync:openapi` copies the product's `api/openapi.yaml` into `openapi/open-mcp-portal.yaml`. Review the diff and rebuild: there is one page per operation, grouped by the operation's first tag (sidebar labels in `lib/openapi.ts`). Sync from the release's tag (`npm run sync:openapi -- v0.15.3`). The copy in the repository was taken from the v0.15.3 release candidate (`batch/maintenance`); resync from the tag once it exists.
 
 ### Brand
 
@@ -95,7 +95,7 @@ rewrites `lib/mark.json` from `keystone/mark-small.svg` and `mark.svg`, and copi
 
 ### Screenshots
 
-Screenshots come only from the fictional "Example Corp" demo instance, never from a real install. Each image has a named slot in `lib/screenshot-slots.json` (its alt text, the file names it may have, and optionally a `hold` reason that keeps a capture out) and is placed with `<Screenshot slot="…" />`. Until an image is imported, the slot shows a clearly marked placeholder. `SCREENSHOTS.md` lists, per slot, the file, size, page, persona and the state to set up. All 43 are captured, from the Example Corp capture stack in `../omp-assets/capture/` (`../omp-assets/screenshots/MANIFEST.md`). When you replace an image, check that its slot's alt text still describes it.
+Screenshots come only from the fictional "Example Corp" demo instance, never from a real install. Each image has a named slot in `lib/screenshot-slots.json` (its alt text, the file names it may have, and optionally a `hold` reason that keeps a capture out) and is placed with `<Screenshot slot="…" />`. Until an image is imported, the slot shows a clearly marked placeholder. `SCREENSHOTS.md` lists, per slot, the file, size, page, persona and the state to set up. Slots 1 to 79 were captured on v0.13.1 and some need retaking for v0.15.3; slots 80 to 83 are new and still placeholders (see `SCREENSHOTS.md`). The images come from the Example Corp capture stack in `../omp-assets/capture/` (`../omp-assets/screenshots/MANIFEST.md`). When you replace an image, check that its slot's alt text still describes it.
 
 ```sh
 SCREENSHOTS_DIR=../omp-assets/screenshots npm run screenshots

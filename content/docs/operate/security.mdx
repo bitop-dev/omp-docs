@@ -130,7 +130,7 @@ Since v0.3.2 a server can be reached with a **key each person pastes**, with the
 | **A secret leaks together with the others** (UM-5) | Every kind joins the call's redaction and the key rotation | A team's static credential echoed back by its own server reaches the caller in the tool result (it is redacted from logs, error messages and recorded payloads) |
 | **A token endpoint or sign-in metadata behind a private CA is trusted with the server's CA** (UM-6) | The TLS settings are for the MCP server's URL only: the token request and discovery use the system roots and no client certificate | A server in OAuth mode, or one using the portal's OAuth client, whose authorization server uses a private CA isn't supported |
 
-The IDs are the rows of the repository's [threat model](https://github.com/ncecere/open-mcp-portal/blob/v0.13.1/docs/threat-model.md) (sections 6.10 to 6.12 and UP-8), with the tests that cover each.
+The IDs are the rows of the repository's [threat model](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/docs/threat-model.md) (sections 6.10 to 6.12 and UP-8), with the tests that cover each.
 
 **Hardening when you use them:**
 
@@ -165,9 +165,9 @@ The audit log and call records are append-only (database triggers refuse changes
 
 ## Hardening status
 
-The repository's [threat model](https://github.com/ncecere/open-mcp-portal/blob/v0.13.1/docs/threat-model.md#9-hardening-ideas-not-findings) keeps a list of hardening ideas, numbered H-1 onward, which are suggestions rather than known vulnerabilities, and a table of where each stands (reviewed 2026-10-18, for v0.2.1, and updated since). v0.2.2 closed most of them, v0.3.0 finished one more detail (H-7's old cookie name), and v0.3.1 closed H-5 except the items in its row below. v0.3.3 closed H-12 and v0.4.0 built H-11. The agent-platform residual M-1 was withdrawn with the feature in v0.4.0 ([Retired: agent platforms](#retired-agent-platforms)).
+The repository's [threat model](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/docs/threat-model.md#9-hardening-ideas-not-findings) keeps a list of hardening ideas, numbered H-1 onward, which are suggestions rather than known vulnerabilities, and a table of where each stands (reviewed 2026-10-18, for v0.2.1, and updated since). v0.2.2 closed most of them, v0.3.0 finished one more detail (H-7's old cookie name), and v0.3.1 closed H-5 except the items in its row below. v0.3.3 closed H-12 and v0.4.0 built H-11. The agent-platform residual M-1 was withdrawn with the feature in v0.4.0 ([Retired: agent platforms](#retired-agent-platforms)).
 
-| Idea | Status in v0.13.1 | What remains |
+| Idea | Status in v0.15.3 | What remains |
 |---|---|---|
 | **H-1**, trusted clients and loopback redirects | **Partly done** (decision 62) | A trusted client's first sign-in to a gateway with a loopback redirect asks once ([Trusted clients](/docs/administer/trusted-clients#the-first-sign-in-from-this-computer)). After that first confirmation a local process can still use the trusted client's ID silently, and a process that drives the person's browser can press Continue. What limits it: the person must be signed in in their browser, the code is PKCE-bound and the token is bound to one gateway |
 | **H-2**, `sendIdentity` default | **Mostly addressed** (decision 64) | The default is off for a server with no authentication on a public host, on for internal hosts and other modes; an explicit value is kept and existing servers are unchanged ([Send identity token](/docs/teams/register-a-server#send-identity-token)). A manual Test sends the token and diagnoses a `401` or `403`. A server that accepts the request and refuses only when a tool runs (DeepWiki's public endpoint) still passes Test; each call's record shows whether the token was sent. Servers registered before v0.2.2 keep their value |
@@ -192,4 +192,4 @@ v0.2.2 added an end-to-end test that a provider token a server echoes back is re
 
 ## Reporting a vulnerability
 
-Report vulnerabilities privately through the repository's [security advisories](https://github.com/ncecere/open-mcp-portal/security/advisories/new), as its `SECURITY.md` describes. Don't open a public issue.
+Report vulnerabilities privately through the repository's [security advisories](https://github.com/bitop-dev/open-mcp-portal/security/advisories/new), as its `SECURITY.md` describes. Don't open a public issue.

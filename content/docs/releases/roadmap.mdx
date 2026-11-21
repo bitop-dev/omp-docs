@@ -3,7 +3,7 @@ title: Roadmap
 description: "What Open MCP Portal has shipped up to v0.13.1, what is still open, the real-world checks that remain, and what it will not do."
 ---
 
-This is where the plan stands after [v0.13.1](/docs/releases/v0-13-1), the current release: an order of work, not a schedule, for one maintainer. **Development is paused after v0.13.1**; work resumes when the maintainer resumes it, and no dates are promised. **Version 1.0.0 is not decided.** Every open item below is a GitHub issue with its implementation plan (data model, API, the code to change, tests, acceptance criteria and open questions), grouped into [milestones](https://github.com/ncecere/open-mcp-portal/milestones). The repository's [roadmap](https://github.com/ncecere/open-mcp-portal/blob/v0.13.1/docs/roadmap.md) has the same plan with each item's summary and dependencies.
+This is where the plan stands after [v0.13.1](/docs/releases/v0-13-1), the current release: an order of work, not a schedule, for one maintainer. **Development is paused after v0.13.1**; work resumes when the maintainer resumes it, and no dates are promised. **Version 1.0.0 is not decided.** Every open item below is a GitHub issue with its implementation plan (data model, API, the code to change, tests, acceptance criteria and open questions), grouped into [milestones](https://github.com/bitop-dev/open-mcp-portal/milestones). The repository's [roadmap](https://github.com/bitop-dev/open-mcp-portal/blob/v0.13.1/docs/roadmap.md) has the same plan with each item's summary and dependencies.
 
 ## What it is, and what it is not
 
@@ -23,25 +23,25 @@ Shipped since v0.3.2, by issue:
 
 | Issue | What shipped | Release |
 | --- | --- | --- |
-| [#28](https://github.com/ncecere/open-mcp-portal/issues/28) | Tool classes (read, write, destructive) set by the server's team | [v0.3.3](/docs/releases/v0-3-3) |
-| [#37](https://github.com/ncecere/open-mcp-portal/issues/37) | Browser sessions, sign out everywhere, optional idle expiry | [v0.3.3](/docs/releases/v0-3-3) |
-| [#68](https://github.com/ncecere/open-mcp-portal/issues/68) | Retirement of external agent-platform trust | [v0.4.0](/docs/releases/v0-4-0) |
-| [#29](https://github.com/ncecere/open-mcp-portal/issues/29) | Tool scopes on keys, service accounts, gateway grants and OAuth grants | [v0.4.0](/docs/releases/v0-4-0) |
-| [#30](https://github.com/ncecere/open-mcp-portal/issues/30) | Per-gateway tool curation | [v0.4.0](/docs/releases/v0-4-0) |
-| [#26](https://github.com/ncecere/open-mcp-portal/issues/26) | Shared service connections for service accounts | [v0.4.0](/docs/releases/v0-4-0) |
-| [#44](https://github.com/ncecere/open-mcp-portal/issues/44) | Separate owner and runtime database roles | [v0.4.0](/docs/releases/v0-4-0) |
-| [#31](https://github.com/ncecere/open-mcp-portal/issues/31) | Approval before sensitive tool calls | [v0.5.0](/docs/releases/v0-5-0) |
-| [#32](https://github.com/ncecere/open-mcp-portal/issues/32) | Gateway access requests and expiring grants | [v0.6.0](/docs/releases/v0-6-0) |
-| [#33](https://github.com/ncecere/open-mcp-portal/issues/33) | Per-server quota, concurrency cap, read retries and circuit breaker; then endpoint failover | [v0.7.0](/docs/releases/v0-7-0), [v0.8.0](/docs/releases/v0-8-0) |
-| [#35](https://github.com/ncecere/open-mcp-portal/issues/35) | Task handles for long-running tools (first stage) | [v0.9.0](/docs/releases/v0-9-0) |
-| [#43](https://github.com/ncecere/open-mcp-portal/issues/43) | Kubernetes release gates: upgrade, ingress, OIDC, restore, load | [v0.9.0](/docs/releases/v0-9-0) |
-| [#52](https://github.com/ncecere/open-mcp-portal/issues/52) | Content-scanning design (no scanner) | [v0.9.0](/docs/releases/v0-9-0) |
-| [#40](https://github.com/ncecere/open-mcp-portal/issues/40) | Server governance: owner, on-call, sensitivity, lifecycle, re-review, transfers | [v0.10.0](/docs/releases/v0-10-0) |
-| [#46](https://github.com/ncecere/open-mcp-portal/issues/46) | The `omp` command line and a public Go client | [v0.10.0](/docs/releases/v0-10-0) |
-| [#71](https://github.com/ncecere/open-mcp-portal/issues/71) | One shared registry of secret rules | [v0.11.0](/docs/releases/v0-11-0) |
-| [#36](https://github.com/ncecere/open-mcp-portal/issues/36) | SCIM 2.0 provisioning and group-to-team-role mapping | [v0.12.0](/docs/releases/v0-12-0) |
+| [#28](https://github.com/bitop-dev/open-mcp-portal/issues/28) | Tool classes (read, write, destructive) set by the server's team | [v0.3.3](/docs/releases/v0-3-3) |
+| [#37](https://github.com/bitop-dev/open-mcp-portal/issues/37) | Browser sessions, sign out everywhere, optional idle expiry | [v0.3.3](/docs/releases/v0-3-3) |
+| [#68](https://github.com/bitop-dev/open-mcp-portal/issues/68) | Retirement of external agent-platform trust | [v0.4.0](/docs/releases/v0-4-0) |
+| [#29](https://github.com/bitop-dev/open-mcp-portal/issues/29) | Tool scopes on keys, service accounts, gateway grants and OAuth grants | [v0.4.0](/docs/releases/v0-4-0) |
+| [#30](https://github.com/bitop-dev/open-mcp-portal/issues/30) | Per-gateway tool curation | [v0.4.0](/docs/releases/v0-4-0) |
+| [#26](https://github.com/bitop-dev/open-mcp-portal/issues/26) | Shared service connections for service accounts | [v0.4.0](/docs/releases/v0-4-0) |
+| [#44](https://github.com/bitop-dev/open-mcp-portal/issues/44) | Separate owner and runtime database roles | [v0.4.0](/docs/releases/v0-4-0) |
+| [#31](https://github.com/bitop-dev/open-mcp-portal/issues/31) | Approval before sensitive tool calls | [v0.5.0](/docs/releases/v0-5-0) |
+| [#32](https://github.com/bitop-dev/open-mcp-portal/issues/32) | Gateway access requests and expiring grants | [v0.6.0](/docs/releases/v0-6-0) |
+| [#33](https://github.com/bitop-dev/open-mcp-portal/issues/33) | Per-server quota, concurrency cap, read retries and circuit breaker; then endpoint failover | [v0.7.0](/docs/releases/v0-7-0), [v0.8.0](/docs/releases/v0-8-0) |
+| [#35](https://github.com/bitop-dev/open-mcp-portal/issues/35) | Task handles for long-running tools (first stage) | [v0.9.0](/docs/releases/v0-9-0) |
+| [#43](https://github.com/bitop-dev/open-mcp-portal/issues/43) | Kubernetes release gates: upgrade, ingress, OIDC, restore, load | [v0.9.0](/docs/releases/v0-9-0) |
+| [#52](https://github.com/bitop-dev/open-mcp-portal/issues/52) | Content-scanning design (no scanner) | [v0.9.0](/docs/releases/v0-9-0) |
+| [#40](https://github.com/bitop-dev/open-mcp-portal/issues/40) | Server governance: owner, on-call, sensitivity, lifecycle, re-review, transfers | [v0.10.0](/docs/releases/v0-10-0) |
+| [#46](https://github.com/bitop-dev/open-mcp-portal/issues/46) | The `omp` command line and a public Go client | [v0.10.0](/docs/releases/v0-10-0) |
+| [#71](https://github.com/bitop-dev/open-mcp-portal/issues/71) | One shared registry of secret rules | [v0.11.0](/docs/releases/v0-11-0) |
+| [#36](https://github.com/bitop-dev/open-mcp-portal/issues/36) | SCIM 2.0 provisioning and group-to-team-role mapping | [v0.12.0](/docs/releases/v0-12-0) |
 
-Partly shipped, still open: the GitHub Action part of [#47](https://github.com/ncecere/open-mcp-portal/issues/47) ([v0.11.0](/docs/releases/v0-11-0)) and the catalog-search part of [#49](https://github.com/ncecere/open-mcp-portal/issues/49) ([v0.13.0](/docs/releases/v0-13-0)). The [release list](/docs/releases) has every release.
+Partly shipped, still open: the GitHub Action part of [#47](https://github.com/bitop-dev/open-mcp-portal/issues/47) ([v0.11.0](/docs/releases/v0-11-0)) and the catalog-search part of [#49](https://github.com/bitop-dev/open-mcp-portal/issues/49) ([v0.13.0](/docs/releases/v0-13-0)). The [release list](/docs/releases) has every release.
 
 Proven on a real deployment (one Talos cluster, Authentik sign-in, CloudNativePG with continuous archiving and daily backups, a restore tested twice): Claude Code over OAuth and an API key on the 2026-07-28 revision, per-person OAuth to GitHub's hosted MCP server, and DeepWiki through a gateway. Everything else that needs a real client, provider or team is in the next section; the [client compatibility](/docs/use/client-compatibility) page says what has been run.
 
@@ -51,14 +51,14 @@ These can't be closed by tests against fake servers. They need a real client, ac
 
 | Issue | Item | Size |
 | --- | --- | --- |
-| [#13](https://github.com/ncecere/open-mcp-portal/issues/13) | Commission an independent security review of the portal | M |
-| [#14](https://github.com/ncecere/open-mcp-portal/issues/14) | Test VS Code against a gateway and report the result | S |
-| [#15](https://github.com/ncecere/open-mcp-portal/issues/15) | Test Cursor against a gateway and report the result | S |
-| [#16](https://github.com/ncecere/open-mcp-portal/issues/16) | Find and test a real client that declares URL elicitation | S |
-| [#17](https://github.com/ncecere/open-mcp-portal/issues/17) | Verify that real clients refresh their access token after an hour | S |
-| [#18](https://github.com/ncecere/open-mcp-portal/issues/18) | Verify delegated credentials with real Google and Microsoft Entra ID providers | M |
-| [#19](https://github.com/ncecere/open-mcp-portal/issues/19) | Verify notifications with a real Slack webhook and a real SMTP provider over TLS | S |
-| [#20](https://github.com/ncecere/open-mcp-portal/issues/20) | Run a pilot with a real team and define when the portal is ready for wider use | M |
+| [#13](https://github.com/bitop-dev/open-mcp-portal/issues/13) | Commission an independent security review of the portal | M |
+| [#14](https://github.com/bitop-dev/open-mcp-portal/issues/14) | Test VS Code against a gateway and report the result | S |
+| [#15](https://github.com/bitop-dev/open-mcp-portal/issues/15) | Test Cursor against a gateway and report the result | S |
+| [#16](https://github.com/bitop-dev/open-mcp-portal/issues/16) | Find and test a real client that declares URL elicitation | S |
+| [#17](https://github.com/bitop-dev/open-mcp-portal/issues/17) | Verify that real clients refresh their access token after an hour | S |
+| [#18](https://github.com/bitop-dev/open-mcp-portal/issues/18) | Verify delegated credentials with real Google and Microsoft Entra ID providers | M |
+| [#19](https://github.com/bitop-dev/open-mcp-portal/issues/19) | Verify notifications with a real Slack webhook and a real SMTP provider over TLS | S |
+| [#20](https://github.com/bitop-dev/open-mcp-portal/issues/20) | Run a pilot with a real team and define when the portal is ready for wider use | M |
 
 What a pilot finds can reorder the feature work below, but not skip its security dependencies.
 
@@ -70,30 +70,30 @@ The milestone names come from the original plan; they are planning buckets, not 
 
 | Issue | Item | Size | Status |
 | --- | --- | --- | --- |
-| [#38](https://github.com/ncecere/open-mcp-portal/issues/38) | Stream the audit log to a SIEM with gap detection and tamper evidence | M | Open. v0.13.0 contains an unused record format and verifier; no export, sink or API exists. |
-| [#39](https://github.com/ncecere/open-mcp-portal/issues/39) | Add legal holds and per-person data export and erasure | M | Open; follows #38 |
-| [#42](https://github.com/ncecere/open-mcp-portal/issues/42) | Publish a Helm chart with autoscaling, backup job and restore runbook | L | Open; its upgrade and restore gates (#43) are in place |
-| [#45](https://github.com/ncecere/open-mcp-portal/issues/45) | Implement subscriptions/listen for list-changed notifications | M | Open; waits for a real client that uses it |
-| [#41](https://github.com/ncecere/open-mcp-portal/issues/41) | Wrap stored secrets with OpenBao, Vault or a cloud KMS using envelope encryption | M | **Deferred:** no direct Vault or OpenBao integration for now. `ENCRYPTION_KEY` stays the key. |
+| [#38](https://github.com/bitop-dev/open-mcp-portal/issues/38) | Stream the audit log to a SIEM with gap detection and tamper evidence | M | Open. v0.13.0 contains an unused record format and verifier; no export, sink or API exists. |
+| [#39](https://github.com/bitop-dev/open-mcp-portal/issues/39) | Add legal holds and per-person data export and erasure | M | Open; follows #38 |
+| [#42](https://github.com/bitop-dev/open-mcp-portal/issues/42) | Publish a Helm chart with autoscaling, backup job and restore runbook | L | Open; its upgrade and restore gates (#43) are in place |
+| [#45](https://github.com/bitop-dev/open-mcp-portal/issues/45) | Implement subscriptions/listen for list-changed notifications | M | Open; waits for a real client that uses it |
+| [#41](https://github.com/bitop-dev/open-mcp-portal/issues/41) | Wrap stored secrets with OpenBao, Vault or a cloud KMS using envelope encryption | M | **Deferred:** no direct Vault or OpenBao integration for now. `ENCRYPTION_KEY` stays the key. |
 
 ### Developer experience and catalog
 
 | Issue | Item | Size | Status |
 | --- | --- | --- | --- |
-| [#47](https://github.com/ncecere/open-mcp-portal/issues/47) | A GitHub Action for deploy-time server config | M | The Action shipped in v0.11.0 (in the repository, not its own repository yet). The Terraform provider is a separate project, outside this repository. |
-| [#49](https://github.com/ncecere/open-mcp-portal/issues/49) | Improve the catalog: categories, icons, README, verified badge, search | M | Search by approved capabilities shipped in v0.13.0; the rest is open |
-| [#48](https://github.com/ncecere/open-mcp-portal/issues/48) | Add a try-a-tool console that shows the exact request and response | M | Open |
-| [#50](https://github.com/ncecere/open-mcp-portal/issues/50) | Add a gateway tool-search mode with find and call tools | M | Open |
-| [#51](https://github.com/ncecere/open-mcp-portal/issues/51) | Add exportable usage and chargeback reports per team and gateway | M | Open; needs a decision (below) |
+| [#47](https://github.com/bitop-dev/open-mcp-portal/issues/47) | A GitHub Action for deploy-time server config | M | The Action shipped in v0.11.0 (in the repository, not its own repository yet). The Terraform provider is a separate project, outside this repository. |
+| [#49](https://github.com/bitop-dev/open-mcp-portal/issues/49) | Improve the catalog: categories, icons, README, verified badge, search | M | Search by approved capabilities shipped in v0.13.0; the rest is open |
+| [#48](https://github.com/bitop-dev/open-mcp-portal/issues/48) | Add a try-a-tool console that shows the exact request and response | M | Open |
+| [#50](https://github.com/bitop-dev/open-mcp-portal/issues/50) | Add a gateway tool-search mode with find and call tools | M | Open |
+| [#51](https://github.com/bitop-dev/open-mcp-portal/issues/51) | Add exportable usage and chargeback reports per team and gateway | M | Open; needs a decision (below) |
 
 ### Later
 
 | Issue | Item | Size | Status |
 | --- | --- | --- | --- |
-| [#70](https://github.com/ncecere/open-mcp-portal/issues/70) | Content scanning: test corpus and benchmark harness | M | Open. v0.13.0 contains the corpus and benchmarks, unwired; no scanner. |
-| [#72](https://github.com/ncecere/open-mcp-portal/issues/72) | Content scanning: definition scanning at refresh, in shadow mode | M | Open |
-| [#73](https://github.com/ncecere/open-mcp-portal/issues/73) | Content scanning: findings in the Capabilities tab and the review dialogs | S | Open |
-| [#53](https://github.com/ncecere/open-mcp-portal/issues/53) | Explore multiple IdPs, client mTLS and DPoP-bound tokens | S | Open; ends in written go or no-go decisions |
+| [#70](https://github.com/bitop-dev/open-mcp-portal/issues/70) | Content scanning: test corpus and benchmark harness | M | Open. v0.13.0 contains the corpus and benchmarks, unwired; no scanner. |
+| [#72](https://github.com/bitop-dev/open-mcp-portal/issues/72) | Content scanning: definition scanning at refresh, in shadow mode | M | Open |
+| [#73](https://github.com/bitop-dev/open-mcp-portal/issues/73) | Content scanning: findings in the Capabilities tab and the review dialogs | S | Open |
+| [#53](https://github.com/bitop-dev/open-mcp-portal/issues/53) | Explore multiple IdPs, client mTLS and DPoP-bound tokens | S | Open; ends in written go or no-go decisions |
 
 ## How the work is ordered
 
@@ -107,7 +107,7 @@ The milestone names come from the original plan; they are planning buckets, not 
 
 | Issue | Decision | Recommended |
 | --- | --- | --- |
-| [#51](https://github.com/ncecere/open-mcp-portal/issues/51) / [#39](https://github.com/ncecere/open-mcp-portal/issues/39) | How usage is attributed to a calling team; whether erasure leaves audit snapshots. | The team of the grant that admitted the call (a billing team for user and group grants); erasure leaves audit snapshots, bounded by audit retention, documented. |
+| [#51](https://github.com/bitop-dev/open-mcp-portal/issues/51) / [#39](https://github.com/bitop-dev/open-mcp-portal/issues/39) | How usage is attributed to a calling team; whether erasure leaves audit snapshots. | The team of the grant that admitted the call (a billing team for user and group grants); erasure leaves audit snapshots, bounded by audit retention, documented. |
 
 How a SCIM user links to a login (#36) was decided in decision 92 and shipped in [v0.12.0](/docs/releases/v0-12-0).
 
@@ -117,4 +117,4 @@ How a SCIM user links to a login (#36) was decided in decision 92 and shipped in
 
 ## Help
 
-The most useful contributions are not code: try a client that hasn't been run (VS Code, Cursor), run the portal with a real team, or answer one of the open decision issues with your use case. See [Client compatibility](/docs/use/client-compatibility), the [issue forms](https://github.com/ncecere/open-mcp-portal/issues/new/choose) and [Discussions](https://github.com/ncecere/open-mcp-portal/discussions).
+The most useful contributions are not code: try a client that hasn't been run (VS Code, Cursor), run the portal with a real team, or answer one of the open decision issues with your use case. See [Client compatibility](/docs/use/client-compatibility), the [issue forms](https://github.com/bitop-dev/open-mcp-portal/issues/new/choose) and [Discussions](https://github.com/bitop-dev/open-mcp-portal/discussions).

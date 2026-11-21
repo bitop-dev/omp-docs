@@ -3,7 +3,7 @@ title: Install on Kubernetes
 description: "Deploy Open MCP Portal with the repository's Kustomize base and example overlay: secrets, configuration, network policies, ingress and probes."
 ---
 
-The repository's [`deploy/kubernetes`](https://github.com/ncecere/open-mcp-portal/tree/v0.13.1/deploy/kubernetes) holds a Kustomize **base** and an **example overlay** (namespace, pinned image, settings, a Gateway API `HTTPRoute` or an ingress-nginx `Ingress`, narrowed NetworkPolicies, and optional metrics). Copy the overlay into your own GitOps repository and replace every `example.org` value and the image digest. The image is `ghcr.io/ncecere/open-mcp-portal:v0.13.1`, signed with cosign; the overlay at the v0.13.1 tag carries a placeholder digest that you replace with the release's (below). Bring your own PostgreSQL 17 and backups: there is no in-cluster database component. `make k8s-validate` renders the base and overlay and checks them against the Kubernetes schemas.
+The repository's [`deploy/kubernetes`](https://github.com/bitop-dev/open-mcp-portal/tree/v0.15.3/deploy/kubernetes) holds a Kustomize **base** and an **example overlay** (namespace, pinned image, settings, a Gateway API `HTTPRoute` or an ingress-nginx `Ingress`, narrowed NetworkPolicies, and optional metrics). Copy the overlay into your own GitOps repository and replace every `example.org` value and the image digest. The image is `ghcr.io/ncecere/open-mcp-portal:v0.15.3`, signed with cosign; replace the overlay's digest with the digest of the release you deploy (below). Bring your own PostgreSQL 17 and backups: there is no in-cluster database component. `make k8s-validate` renders the base and overlay and checks them against the Kubernetes schemas.
 
 <Callout type="warn" title="Upgrading from v0.3.x: create the migration Secret first">
 Since v0.4.0 the `migrate` init container reads its database URL from a separate Secret, **`open-mcp-portal-migrate`** (key `DATABASE_MIGRATE_URL`), and no longer from `open-mcp-portal-runtime`. With the new manifests and without that Secret, the init container has no database URL and the new pods don't start. Create it before you roll out, even for a single-login install (copy the same URL): see [Secrets](#secrets).
@@ -11,19 +11,21 @@ Since v0.4.0 the `migrate` init container reads its database URL from a separate
 
 ## The image
 
-The base and the overlay use `ghcr.io/ncecere/open-mcp-portal`; the base sets the tag `v0.13.1`. Check the signature of the release you deploy (cosign v3.0 or newer), then put its digest in the overlay's `images:`. The digest of v0.13.1 is `sha256:cec6a9e1189845ca2f9827e972c55af20ce22de3a40645abdf3ab08a6730a453` (each release also attaches it as `open-mcp-portal-<tag>.digest.txt`):
+The base and the overlay use `ghcr.io/ncecere/open-mcp-portal`; the base sets the tag `v0.15.3`. Check the signature of the release you deploy (cosign v3.0 or newer), then put its digest in the overlay's `images:`. The digest of v0.15.3 is {/* RELEASE-TODO: v0.15.3 digest (here, below and in the images: entry; these are v0.15.2's) */}`sha256:e30bef6f56de186a39431ecde67a35dc155d5c33e597918a47a3a0644a8c2c28` (each release also attaches it as `open-mcp-portal-<tag>.digest.txt`):
 
 ```sh
-cosign verify ghcr.io/ncecere/open-mcp-portal@sha256:cec6a9e1189845ca2f9827e972c55af20ce22de3a40645abdf3ab08a6730a453 \
-  --certificate-identity https://github.com/ncecere/open-mcp-portal/.github/workflows/image.yml@refs/tags/v0.13.1 \
+cosign verify ghcr.io/ncecere/open-mcp-portal@sha256:e30bef6f56de186a39431ecde67a35dc155d5c33e597918a47a3a0644a8c2c28 \
+  --certificate-identity https://github.com/bitop-dev/open-mcp-portal/.github/workflows/image.yml@refs/tags/v0.15.3 \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
+
+Releases up to v0.15.2 were published from the repository's old address and are signed as `https://github.com/ncecere/open-mcp-portal/.github/workflows/image.yml@refs/tags/<tag>` ([The image](/docs/operate/compose#the-image)).
 
 ```yaml
 images:
   - name: ghcr.io/ncecere/open-mcp-portal
-    newTag: v0.13.1
-    digest: sha256:cec6a9e1189845ca2f9827e972c55af20ce22de3a40645abdf3ab08a6730a453
+    newTag: v0.15.3
+    digest: sha256:e30bef6f56de186a39431ecde67a35dc155d5c33e597918a47a3a0644a8c2c28
 ```
 
 ## Secrets
@@ -144,7 +146,7 @@ kubectl -n open-mcp-portal exec deploy/open-mcp-portal -c portal -- /open-mcp-po
 
 ## Smoke test
 
-`make k8s-validate` only renders the manifests and checks their schemas. `make k8s-smoke` (from a checkout of the repository, [`scripts/k8s-smoke.sh`](https://github.com/ncecere/open-mcp-portal/blob/v0.13.1/scripts/k8s-smoke.sh)) applies them to a real cluster and uses what it deployed. It has five scenarios, each in a fresh `kind` cluster of its own, chosen with `SMOKE_SCENARIO`:
+`make k8s-validate` only renders the manifests and checks their schemas. `make k8s-smoke` (from a checkout of the repository, [`scripts/k8s-smoke.sh`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/scripts/k8s-smoke.sh)) applies them to a real cluster and uses what it deployed. It has five scenarios, each in a fresh `kind` cluster of its own, chosen with `SMOKE_SCENARIO`:
 
 | Scenario | Command | Takes (warm, Linux) | Workflow |
 |---|---|---|---|
@@ -183,7 +185,7 @@ Each scenario builds the portal and the fake MCP server images from the working 
 - **Client-visible `/readyz`.** A terminating pod answers `/readyz` with `503` on purpose, so a loop of `/readyz` requests during a rollout sees a few. Real traffic (`/healthz`, `/mcp`) doesn't.
 - **GitHub-hosted runners.** The `upgrade`, `ingress`, `restore` and `load` jobs were run on a Linux amd64 machine, not yet on GitHub-hosted runners.
 
-**In CI.** The workflows [`k8s-smoke.yml`](https://github.com/ncecere/open-mcp-portal/blob/v0.13.1/.github/workflows/k8s-smoke.yml), [`k8s-upgrade.yml`](https://github.com/ncecere/open-mcp-portal/blob/v0.13.1/.github/workflows/k8s-upgrade.yml) and [`k8s-load.yml`](https://github.com/ncecere/open-mcp-portal/blob/v0.13.1/.github/workflows/k8s-load.yml) run the scenarios. `k8s-upgrade` runs for every release tag and weekly.
+**In CI.** The workflows [`k8s-smoke.yml`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/.github/workflows/k8s-smoke.yml), [`k8s-upgrade.yml`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/.github/workflows/k8s-upgrade.yml) and [`k8s-load.yml`](https://github.com/bitop-dev/open-mcp-portal/blob/v0.15.3/.github/workflows/k8s-load.yml) run the scenarios. `k8s-upgrade` runs for every release tag and weekly.
 
 ## What's in the repository
 

@@ -15,7 +15,7 @@ const target = new URL('../openapi/open-mcp-portal.yaml', import.meta.url).pathn
 const ref = process.argv[2];
 
 if (ref) {
-  const url = `https://raw.githubusercontent.com/ncecere/open-mcp-portal/${encodeURIComponent(ref)}/api/openapi.yaml`;
+  const url = `https://raw.githubusercontent.com/bitop-dev/open-mcp-portal/${encodeURIComponent(ref)}/api/openapi.yaml`;
   const res = await fetch(url);
   if (!res.ok) {
     console.error(`GET ${url}: ${res.status} ${res.statusText}`);
@@ -31,7 +31,7 @@ if (ref) {
     : ['..', '../../golang'].flatMap((dir) => ['open-mcp-portal', 'open-mcp-gateway'].map((name) => resolve(join(import.meta.dirname, '..', dir, name))));
   const repo = candidates.find((dir) => existsSync(join(dir, 'api/openapi.yaml')));
   if (!repo) {
-    console.error(`api/openapi.yaml not found in ${candidates.join(' or ')}. Set OMP_REPO, or pass a tag: npm run sync:openapi -- v0.13.1`);
+    console.error(`api/openapi.yaml not found in ${candidates.join(' or ')}. Set OMP_REPO, or pass a tag: npm run sync:openapi -- v0.15.3`);
     process.exit(1);
   }
   const source = join(repo, 'api/openapi.yaml');
