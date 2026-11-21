@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Open MCP Portal API
-  version: 0.13.1
+  version: 0.15.2
   description: 'Management API. Browser sessions authenticate with a cookie; writes need the session''s `X-CSRF-Token`
     (from `GET /v1/me`) and a same-origin `Origin`. Success responses are `{"data": ...}` and errors `{"error":
     {"code": "...", "message": "..."}}`.
@@ -64,6 +64,235 @@ tags:
   description: Session-only sensitive tool-call approvals and rules (docs/tool-approvals.md, decision 82).
     Rules never grant access. No automation token can use these operations.
 paths:
+  /v1/admin/settings/scanning:
+    get:
+      operationId: adminGetScanningSettings
+      tags: [admin]
+      summary: Definition scanning (browser session only)
+      responses:
+        '200':
+          description: Detection metadata; finding nothing is not a safety verdict
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: {$ref: '#/components/schemas/ScanningSettings'}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '401':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+    put:
+      operationId: adminUpdateScanningSettings
+      tags: [admin]
+      summary: Definition scanning (browser session only)
+      parameters:
+      - $ref: '#/components/parameters/IfMatchHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ScanningSettingsUpdate'}
+      responses:
+        '200':
+          description: Detection metadata; finding nothing is not a safety verdict
+          headers:
+            ETag: {$ref: '#/components/headers/ETag'}
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: {$ref: '#/components/schemas/ScanningSettings'}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '401':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '422':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/scanning/rules:
+    get:
+      operationId: adminListScanningRules
+      tags: [admin]
+      summary: Definition scanning (browser session only)
+      responses:
+        '200':
+          description: Detection metadata; finding nothing is not a safety verdict
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: {$ref: '#/components/schemas/ScanningCatalog'}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '401':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/teams/{team}/mcp-servers/{serverId}/scan-findings:
+    get:
+      operationId: teamListDefinitionFindings
+      tags: [admin]
+      summary: Definition scanning (browser session only)
+      parameters:
+      - name: team
+        in: path
+        required: true
+        schema: {type: string}
+      - name: serverId
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Detection metadata; finding nothing is not a safety verdict
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: {$ref: '#/components/schemas/DefinitionScanPage'}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '401':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/teams/{team}/mcp-servers/{serverId}/scan:
+    post:
+      operationId: teamRescanDefinitions
+      tags: [admin]
+      summary: Definition scanning (browser session only)
+      parameters:
+      - name: team
+        in: path
+        required: true
+        schema: {type: string}
+      - name: serverId
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Detection metadata; finding nothing is not a safety verdict
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: {$ref: '#/components/schemas/DefinitionScanPage'}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '401':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/mcp-servers/{serverId}/scan-findings:
+    get:
+      operationId: adminListDefinitionFindings
+      tags: [admin]
+      summary: Definition scanning (browser session only)
+      parameters:
+      - name: serverId
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Detection metadata; finding nothing is not a safety verdict
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: {$ref: '#/components/schemas/DefinitionScanPage'}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '401':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/mcp-servers/{serverId}/scan:
+    post:
+      operationId: adminRescanDefinitions
+      tags: [admin]
+      summary: Definition scanning (browser session only)
+      parameters:
+      - name: serverId
+        in: path
+        required: true
+        schema: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Detection metadata; finding nothing is not a safety verdict
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: {$ref: '#/components/schemas/DefinitionScanPage'}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '401':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
   /healthz:
     get:
       tags:
@@ -742,6 +971,600 @@ paths:
         '404':
           $ref: '#/components/responses/ErrorReply'
         '409':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/audit/stream:
+    get:
+      tags: [admin]
+      operationId: adminAuditStream
+      summary: Sealed audit records after an exclusive sequence cursor (NDJSON; contiguous or range_expired)
+      x-omp-token-scopes: [platform:read]
+      parameters:
+      - name: after_seq
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 1000
+          default: 100
+      - name: profile
+        in: query
+        schema:
+          type: string
+          enum: [summary, full]
+          default: summary
+      responses:
+        '200':
+          description: Audit stream response; tip is advisory and never replaces a pinned receiver anchor
+          content:
+            application/x-ndjson:
+              schema:
+                type: string
+                description: One AuditStreamEnvelope per line, including normative checkpoint.statement, kids, signatures and decoded binding fields (docs/audit-record-v2.md); at most 16 MiB per line; oversized full rows use a reference
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '410':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/audit/stream/tip:
+    get:
+      tags: [admin]
+      operationId: adminAuditStreamTip
+      summary: Advisory unsigned stream tip with checkpoint enablement, minimum reader version, last sequence and time; never replaces a pinned receiver anchor
+      x-omp-token-scopes: [platform:read]
+      responses:
+        '200':
+          description: Audit stream response; tip is advisory and never replaces a pinned receiver anchor
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '410':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/audit/verify:
+    get:
+      tags: [admin]
+      operationId: adminAuditVerify
+      summary: Verify retained hashes and checkpoint bindings, Ed25519 signatures and authority ranges; report first bad sequence
+      x-omp-token-scopes: [platform:read]
+      parameters:
+      - name: from
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: to
+        in: query
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Audit stream response; tip is advisory and never replaces a pinned receiver anchor
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '410':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/audit/entries/{seq}/full:
+    parameters:
+    - name: seq
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    get:
+      tags: [admin]
+      operationId: adminAuditFull
+      summary: Bounded full-row JSON chunks, or normative checkpoint envelope for checkpoint sequences; consumer query records an oversized entry fetch
+      x-omp-token-scopes: [platform:read]
+      parameters:
+      - name: consumer
+        in: query
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Audit stream response; tip is advisory and never replaces a pinned receiver anchor
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '410':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/audit/stream/ack:
+    post:
+      tags: [admin]
+      operationId: adminAuditAck
+      summary: Monotonic registered-consumer acknowledgement, bounded by the sealed tip
+      x-omp-token-scopes: [platform:read]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuditConsumerRequest'
+      responses:
+        '200':
+          description: Audit stream response; tip is advisory and never replaces a pinned receiver anchor
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '410':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/settings/audit-sinks:
+    get:
+      tags: [admin]
+      operationId: adminAuditSinks
+      summary: Audit sink management; browser sessions only, auditors read-only; URL write-only and secrets shown once
+      responses:
+        '200':
+          description: Secret-free sink settings (secret only on create or rotate); revision conflicts and recovery requirements return 409
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+    post:
+      tags: [admin]
+      operationId: adminAuditCreateSink
+      summary: Audit sink management; browser sessions only, auditors read-only; URL write-only and secrets shown once
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuditSinkRequest'
+      responses:
+        '200':
+          description: Secret-free sink settings (secret only on create or rotate); revision conflicts and recovery requirements return 409
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/settings/audit-sinks/{id}:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    get:
+      tags: [admin]
+      operationId: adminAuditSink
+      summary: Audit sink management; browser sessions only, auditors read-only; URL write-only and secrets shown once
+      responses:
+        '200':
+          description: Secret-free sink settings (secret only on create or rotate); revision conflicts and recovery requirements return 409
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+    put:
+      tags: [admin]
+      operationId: adminAuditUpdateSink
+      summary: Audit sink management; browser sessions only, auditors read-only; URL write-only and secrets shown once
+      parameters:
+      - $ref: '#/components/parameters/IfMatchHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuditSinkRequest'
+      responses:
+        '200':
+          description: Secret-free sink settings (secret only on create or rotate); revision conflicts and recovery requirements return 409
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+    delete:
+      tags: [admin]
+      operationId: adminAuditDeleteSink
+      summary: Audit sink management; browser sessions only, auditors read-only; URL write-only and secrets shown once
+      parameters:
+      - $ref: '#/components/parameters/IfMatchHeader'
+      responses:
+        '200':
+          description: Secret-free sink settings (secret only on create or rotate); revision conflicts and recovery requirements return 409
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/settings/audit-sinks/{id}/rotate-secret:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    post:
+      tags: [admin]
+      operationId: adminAuditRotateSinkSecret
+      summary: Audit sink management; browser sessions only, auditors read-only; URL write-only and secrets shown once
+      parameters:
+      - $ref: '#/components/parameters/IfMatchHeader'
+      responses:
+        '200':
+          description: Secret-free sink settings (secret only on create or rotate); revision conflicts and recovery requirements return 409
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/settings/audit-sinks/{id}/test:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    post:
+      tags: [admin]
+      operationId: adminAuditTestSink
+      summary: Audit sink management; browser sessions only, auditors read-only; URL write-only and secrets shown once
+      parameters:
+      - $ref: '#/components/parameters/IfMatchHeader'
+      responses:
+        '200':
+          description: Secret-free sink settings (secret only on create or rotate); revision conflicts and recovery requirements return 409
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/settings/audit-sinks/{id}/resume:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    post:
+      tags: [admin]
+      operationId: adminAuditResumeSink
+      summary: Audit sink management; browser sessions only, auditors read-only; URL write-only and secrets shown once
+      parameters:
+      - $ref: '#/components/parameters/IfMatchHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuditSinkRequest'
+      responses:
+        '200':
+          description: Secret-free sink settings (secret only on create or rotate); revision conflicts and recovery requirements return 409
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/settings/audit-sinks/{id}/oversized/{seq}/acknowledge:
+    parameters:
+    - name: id
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    - name: seq
+      in: path
+      required: true
+      schema: {type: integer, format: int64}
+    post:
+      tags: [admin]
+      operationId: adminAuditAcknowledgeSinkOversized
+      summary: Audit sink management; browser sessions only, auditors read-only; URL write-only and secrets shown once
+      parameters:
+      - $ref: '#/components/parameters/IfMatchHeader'
+      responses:
+        '200':
+          description: Secret-free sink settings (secret only on create or rotate); revision conflicts and recovery requirements return 409
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/audit/stream/status:
+    get:
+      tags: [admin]
+      operationId: adminAuditStreamStatus
+      summary: Audit stream status (platform admins, auditors or platform:read)
+      description: >-
+        The stream tip and checkpoint state, `sealer_enabled` (AUDIT_STREAM_ENABLED on the replica that answered), the
+        sink gate, every sink's secret-free view (including `last_ok_at`, lag and retention effect), every pull consumer
+        and checkpoint key metadata. Never contains a sink URL or secret. A required full-profile sink held at an
+        oversized row has `held_oversized_seq` and `held_notice`: null until its envelope is attempted, then
+        `delivered_at` (sent; not resent while held) or `failed_at` with `failure_class` (retried with backoff).
+      x-omp-token-scopes: [platform:read]
+      responses:
+        '200':
+          description: Audit stream status
+          content:
+            application/json:
+              schema: {type: object, additionalProperties: true}
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '404':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/settings/audit-consumers:
+    get:
+      tags: [admin]
+      operationId: adminAuditConsumers
+      summary: List audit consumers (platform-admin browser sessions only)
+      responses:
+        '200':
+          description: Audit stream response; tip is advisory and never replaces a pinned receiver anchor
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '410':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+    post:
+      tags: [admin]
+      operationId: adminAuditRegisterConsumer
+      summary: Register a consumer (platform-admin browser session, audited, If-Match)
+      parameters:
+      - $ref: '#/components/parameters/IfMatchHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuditConsumerRequest'
+      responses:
+        '200':
+          description: Audit stream response; tip is advisory and never replaces a pinned receiver anchor
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '410':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+  /v1/admin/settings/audit-consumers/{consumer}:
+    parameters:
+    - name: consumer
+      in: path
+      required: true
+      schema:
+        type: string
+    put:
+      tags: [admin]
+      operationId: adminAuditSetRequired
+      summary: Change required retention protection (platform-admin browser session, audited, If-Match)
+      parameters:
+      - $ref: '#/components/parameters/IfMatchHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuditConsumerRequest'
+      responses:
+        '200':
+          description: Audit stream response; tip is advisory and never replaces a pinned receiver anchor
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '410':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
+          $ref: '#/components/responses/ErrorReply'
+    delete:
+      tags: [admin]
+      operationId: adminAuditRemoveConsumer
+      summary: Remove a consumer (platform-admin browser session, audited, If-Match)
+      parameters:
+      - $ref: '#/components/parameters/IfMatchHeader'
+      responses:
+        '200':
+          description: Audit stream response; tip is advisory and never replaces a pinned receiver anchor
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/ErrorReply'
+        '403':
+          $ref: '#/components/responses/ErrorReply'
+        '409':
+          $ref: '#/components/responses/ErrorReply'
+        '410':
+          $ref: '#/components/responses/ErrorReply'
+        '428':
+          $ref: '#/components/responses/ErrorReply'
+        '500':
           $ref: '#/components/responses/ErrorReply'
   /v1/admin/audit:
     get:
@@ -7645,6 +8468,90 @@ components:
               data:
                 $ref: '#/components/schemas/UsageReport'
   schemas:
+    AuditSinkRequest:
+      type: object
+      properties:
+        name: {type: string, minLength: 1, maxLength: 100}
+        url: {type: string, maxLength: 2048, writeOnly: true}
+        profile: {type: string, enum: [summary, full]}
+        required: {type: boolean}
+        enabled: {type: boolean}
+        batch_max_records: {type: integer, minimum: 1, maximum: 1000}
+        cursor_seq: {type: integer, format: int64, minimum: 0}
+    AuditConsumerRequest:
+      type: object
+      properties:
+        consumer:
+          type: string
+          maxLength: 64
+        profile:
+          type: string
+          enum: [summary, full]
+        required:
+          type: boolean
+        seq:
+          type: integer
+          format: int64
+          minimum: 0
+    ScanningSettingsUpdate:
+      type: object
+      required: [definitionMode]
+      properties:
+        definitionMode: {type: string, enum: ["off", shadow]}
+    ScanningSettings:
+      type: object
+      required: [definitionMode, revision]
+      properties:
+        definitionMode: {type: string, enum: ["off", shadow]}
+        revision: {type: integer, format: int64}
+    ScanningCatalog:
+      type: object
+      required: [rulesetVersion, rules]
+      properties:
+        rulesetVersion: {type: string}
+        rules:
+          type: array
+          items:
+            type: object
+            required: [id, group, severity, description]
+            properties:
+              id: {type: string}
+              group: {type: string}
+              severity: {type: string}
+              description: {type: string}
+    DefinitionScanPage:
+      type: array
+      items:
+        type: object
+        required: [capabilityId, scan]
+        properties:
+          capabilityId: {type: string, format: uuid}
+          scan:
+            type: object
+            required: [status, rulesetVersion, findings]
+            properties:
+              status: {type: string, enum: ["off", stale, scanned, incomplete]}
+              rulesetVersion: {type: string}
+              reason: {type: string}
+              scannedAt:
+                type: string
+                format: date-time
+                description: >-
+                  When the stored scan ran. Present only for status scanned or incomplete (a current scan of
+                  this definition under this ruleset); absent when scanning is off or the scan is stale.
+              findings:
+                type: array
+                items:
+                  type: object
+                  required: [ruleId, group, severity, count, location]
+                  properties:
+                    ruleId: {type: string}
+                    group:
+                      type: string
+                      description: The rule's catalog group (secret, unicode, poison, length); empty for a rule id no longer in the catalog.
+                    severity: {type: string}
+                    count: {type: integer}
+                    location: {type: string}
     ApprovalTargetKind:
       type: string
       enum: [server, gateway]
@@ -14408,6 +15315,7 @@ components:
           - auth_providers
           - usage
           - notification_settings
+          - audit_stream
           - team_notification_settings
           - service_connections
           - account_connections
